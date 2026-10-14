@@ -1,1124 +1,433 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-  <title>Sim Progress Tracker – LMU Pro</title>
-  <meta name="theme-color" content="#090a10" />
-  <style>
-    :root {
-      --bg: #000000;
-      --card: #111111;
-      --border: #333333;
-      --red: #cc0000;
-      --red-glow: rgba(204, 0, 0, 0.2);
-      --green: #00cc33;
-      --text: #ffffff;
-      --muted: #888888;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>Sim Progress Tracker – LMU Pro</title>
+<meta name="theme-color" content="#090a10" />
+<style>
+:root{color-scheme:dark;--bg:#080a10;--card:rgba(255,255,255,.055);--border:rgba(255,255,255,.13);--red:#ff3b48;--red-glow:rgba(255,59,72,.25);--green:#67f5a7;--text:#f6f7fb;--muted:#9ba3b3;--tab:64px;--safe:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg);scroll-behavior:smooth}
+body{margin:0;position:relative;isolation:isolate;min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse at 12% 4%,rgba(255,48,64,.18),transparent 34%),radial-gradient(ellipse at 93% 28%,rgba(78,101,190,.16),transparent 33%),radial-gradient(ellipse at 55% 100%,rgba(255,255,255,.055),transparent 42%),linear-gradient(145deg,#080a10,#10121b 50%,#07080d)}
+button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
+.hidden{display:none!important}.mono{font-family:ui-monospace,Menlo,Consolas,monospace}.dim{color:var(--muted)}
+@keyframes viewIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes popIn{0%{opacity:0;transform:scale(.9)}60%{transform:scale(1.02)}100%{opacity:1;transform:scale(1)}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 0 rgba(255,59,72,0)}50%{box-shadow:0 0 22px rgba(255,59,72,.35)}}
+@keyframes sweep{from{transform:translateX(-120%)}to{transform:translateX(220%)}}
+@keyframes flashGreen{0%{background:rgba(103,245,167,.25)}100%{background:var(--card)}}
+@keyframes shakeX{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes pbBurst{0%{box-shadow:0 0 0 rgba(103,245,167,0)}30%{box-shadow:0 0 34px rgba(103,245,167,.45);transform:scale(1.02)}100%{box-shadow:0 0 0 rgba(103,245,167,0);transform:none}}
 
-    * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+/* glass surfaces */
+.btn,.item,.stat,.pbcard,.toast,.panel,.adj,.iconback{border:1px solid var(--border);background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(255,255,255,.028));box-shadow:inset 0 1px rgba(255,255,255,.1),0 8px 24px rgba(0,0,0,.1);-webkit-backdrop-filter:blur(22px) saturate(155%);backdrop-filter:blur(22px) saturate(155%)}
+header,.tabbar,.actionbar{background:rgba(13,15,23,.72);-webkit-backdrop-filter:blur(28px) saturate(165%);backdrop-filter:blur(28px) saturate(165%)}
+.item::before,.stat::before,.pbcard::before{content:"";position:absolute;top:0;left:12%;right:12%;height:1px;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent)}
 
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-      min-height: 100vh;
-    }
+/* header */
+header{position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:10px;padding:calc(8px + env(safe-area-inset-top,0px)) 12px 8px;border-bottom:1px solid rgba(255,255,255,.11);box-shadow:inset 0 1px rgba(255,255,255,.1)}
+.iconback{width:44px;height:44px;flex:0 0 44px;border-radius:50%;display:grid;place-items:center;color:#d3d7e1;padding:0}
+.iconback:active{background:rgba(255,255,255,.12)}.iconback.off{visibility:hidden}
+.hspace{width:44px;flex:0 0 44px}
+.htext{flex:1;min-width:0;text-align:center}
+.htext small{display:block;color:#ff7d86;font-size:9px;line-height:1.5;font-weight:800;letter-spacing:2px;text-transform:uppercase}
+.htext b{display:block;font-size:18px;font-weight:800;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-    header {
-      padding: 16px;
-      font-size: 18px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      border-bottom: 1px solid var(--border);
-      text-align: center;
-      text-transform: uppercase;
-      background: #050505;
-      position: sticky;
-      top: 0;
-      z-index: 50;
-    }
+.container{position:relative;z-index:1;max-width:660px;margin:0 auto;padding:20px 17px calc(var(--tab) + var(--safe) + 28px)}
+body.bl .container{padding-bottom:calc(var(--tab) + var(--safe) + 210px)}
+body.bf .container{padding-bottom:calc(var(--tab) + var(--safe) + 130px)}
+.view{animation:viewIn .32s cubic-bezier(.2,.7,.2,1) both}
+.list{display:flex;flex-direction:column;gap:11px}
+.list>*{animation-delay:calc(var(--i,0)*35ms)}
+.list.still>*{animation:none}
+.list.still>.item.fresh{animation:flashGreen 1.1s ease-out}
 
-    .container {
-        padding: 16px;
-        padding-bottom: 140px;
-        max-width: 600px;
-        margin: 0 auto;
-    }
+/* buttons / rows */
+.btn{position:relative;overflow:hidden;width:100%;min-height:58px;padding:14px 17px;border-radius:16px;font-size:16px;font-weight:600;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:12px;animation:cardIn .42s cubic-bezier(.2,.7,.2,1) both;transition:transform .16s ease,border-color .2s ease,background .2s ease}
+.btn:hover{border-color:rgba(255,255,255,.23)}.btn:active{transform:scale(.985);background:rgba(255,255,255,.095)}
+.btn::after{content:"";position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transform:translateX(-120%);pointer-events:none}
+.btn:active::after{animation:sweep .5s ease-out}
+.btn.danger{margin-top:12px;border-color:rgba(255,81,94,.2);background:rgba(255,59,72,.05);color:#ff929a}
+.item{position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;gap:14px;padding:15px 17px;border-radius:17px;animation:cardIn .35s ease-out both;scroll-margin:90px 0 260px}
+.item.fresh{animation:cardIn .35s ease-out both,flashGreen 1.1s ease-out}
+.item .big{font-size:18px}
+.delete-btn{flex:0 0 auto;min-width:44px;min-height:44px;border:1px solid rgba(255,91,103,.22);border-radius:13px;color:#ff8790;font-size:13px;font-weight:700;background:linear-gradient(145deg,rgba(255,59,72,.16),rgba(255,255,255,.035))}
+.pb{color:var(--green);font-weight:700}.slow{color:#ff818b;font-weight:700}
+.badge{display:inline-block;font-size:10px;font-weight:800;letter-spacing:1.5px;padding:4px 9px;border-radius:99px;color:var(--green);background:rgba(103,245,167,.12);border:1px solid rgba(103,245,167,.35)}
+.badge.sm{padding:2px 7px;font-size:9px}.badge.off{color:var(--muted);background:rgba(255,255,255,.05);border-color:var(--border)}
+.pbcard{position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center;padding:18px 20px;margin-bottom:16px;border-radius:20px}
+.pbcard .t{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:32px;font-weight:800;letter-spacing:-.8px;color:var(--green);margin-top:8px}.pbcard .t.dim{color:var(--muted)}
+.pbcard.celebrate{animation:pbBurst 1.1s ease-out}
+.pbcard.celebrate::after{content:"";position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);animation:sweep .9s ease-out}
+.empty{text-align:center;color:var(--muted);padding:28px 10px;line-height:1.6}
+.empty .btn{margin:14px auto 0;max-width:260px;justify-content:center;color:var(--text)}
 
-    .view { animation: viewIn 0.28s ease-out both; }
-    .hidden { display: none !important; }
+/* inputs */
+input,select{width:100%;min-height:48px;padding:12px;color:var(--text);font-size:17px;border:1px solid rgba(255,255,255,.15);border-radius:13px;background:rgba(255,255,255,.055);box-shadow:inset 0 1px rgba(255,255,255,.055);outline:none;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus{border-color:rgba(255,91,104,.72);box-shadow:0 0 0 3px rgba(255,59,72,.1)}
+input.invalid{border-color:var(--red);animation:shakeX .25s ease-out}
+input::placeholder{color:rgba(190,197,212,.52)}select option{background:#171923;color:#f6f7fb}
+:focus-visible{outline:2px solid rgba(255,105,116,.9);outline-offset:3px}
+.lbl{display:block;color:#aaa;font-size:14px;margin:0 0 6px}
+.sec{margin:26px 0 14px;font-size:20px;letter-spacing:-.3px}.sec:first-child{margin-top:0}
+.field{margin-bottom:16px}
+.compute-btn{width:100%;min-height:56px;padding:16px 18px;color:#fff;font-weight:700;font-size:15px;letter-spacing:1px;text-transform:uppercase;border:1px solid rgba(255,255,255,.2);border-radius:16px;background:linear-gradient(120deg,#ff4654,#d8192c 72%,#b80d22);box-shadow:inset 0 1px rgba(255,255,255,.28),0 8px 24px rgba(226,25,45,.2);transition:transform .12s,opacity .15s}
+.compute-btn:active{opacity:.9;transform:scale(.985)}
+.stat{position:relative;overflow:hidden;padding:21px;margin-bottom:15px;border-radius:20px;line-height:1.75;animation:cardIn .35s ease-out both}
+.stat hr{border:0;border-top:1px solid rgba(255,255,255,.12);margin:10px 0}
+.stat .bar{height:7px;margin-top:12px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
+.stat .bar>i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--red),#ff4444);box-shadow:0 0 14px rgba(255,59,72,.23);transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.stat .bar.gain>i{background:linear-gradient(90deg,#00a82a,var(--green));box-shadow:0 0 14px rgba(103,245,167,.2)}
+.stat .big{font-size:26px;font-weight:800;letter-spacing:-.8px;display:inline-block}.stat .big.pop{animation:popIn .45s ease-out both}
+.saved-type{display:block;font-size:9px;font-weight:800;letter-spacing:1.5px;margin-bottom:4px;text-transform:uppercase}
+.saved-main{font-size:16px;font-weight:700;line-height:1.5}.saved-dates{display:block;font-size:13px;color:var(--muted);margin-top:4px}
 
-    @keyframes viewIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
+/* bottom bars */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:80;height:calc(var(--tab) + var(--safe));padding:6px 10px var(--safe);border-top:1px solid rgba(255,255,255,.11);box-shadow:inset 0 1px rgba(255,255,255,.1)}
+.tabs{display:flex;gap:6px;max-width:660px;margin:0 auto}
+.tab{position:relative;overflow:hidden;flex:1;height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1px solid transparent;border-radius:16px;background:none;color:var(--muted);font-size:10px;font-weight:700;letter-spacing:.6px;transition:color .2s,background .2s}
+.tab i{font-style:normal;font-size:19px;line-height:1}
+.tab.on{color:#fff;border-color:rgba(255,85,98,.4);background:linear-gradient(120deg,rgba(255,57,72,.2),rgba(255,255,255,.05));box-shadow:inset 0 1px rgba(255,255,255,.16)}
+.tab.on i{color:#ff7b85}
+.tab::after{content:"";position:absolute;top:0;left:0;width:40%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);transform:translateX(-120%);pointer-events:none}
+.tab:active::after{animation:sweep .5s ease-out}
+.actionbar{display:none;position:fixed;left:0;right:0;bottom:calc(var(--tab) + var(--safe));z-index:70;padding:10px 14px 8px;border-top:1px solid rgba(255,255,255,.11);box-shadow:inset 0 1px rgba(255,255,255,.1)}
+body.bl #lapBar,body.bf #finBar{display:block}
+.abin{max-width:660px;margin:0 auto}
+.adjrow{display:flex;gap:6px;margin-bottom:8px}
+.adj{flex:1;min-height:44px;border-radius:13px;font:700 13px ui-monospace,Menlo,Consolas,monospace;color:#d3d7e1}.adj:active{background:rgba(255,255,255,.12)}
+.inrow{display:flex;gap:8px}
+.inrow input{flex:1;min-width:0;text-align:center;font-size:18px;font-family:ui-monospace,Menlo,Consolas,monospace}
+.addbtn{flex:0 0 88px;min-height:48px;color:#fff;font-weight:800;font-size:15px;border:1px solid rgba(255,255,255,.28);border-radius:16px;background:linear-gradient(145deg,rgba(255,86,97,.98),rgba(198,15,33,.92));box-shadow:inset 0 1px rgba(255,255,255,.35),0 4px 12px rgba(0,0,0,.28);animation:pulseGlow 3.8s ease-in-out infinite .6s;transition:transform .12s}
+.addbtn:active{transform:scale(.94)}
+.msg{min-height:18px;padding-top:4px;font-size:12px;color:#ff818b;text-align:center}
 
-    @keyframes cardIn {
-      from { opacity: 0; transform: translateY(14px) scale(0.98); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
-    @keyframes popIn {
-      0% { opacity: 0; transform: scale(0.9); }
-      60% { transform: scale(1.02); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-
-    @keyframes pulseGlow {
-      0%, 100% { box-shadow: 0 0 0 rgba(204,0,0,0); }
-      50% { box-shadow: 0 0 22px rgba(204,0,0,0.35); }
-    }
-
-    @keyframes sweep {
-      from { transform: translateX(-120%); }
-      to { transform: translateX(220%); }
-    }
-
-    @keyframes flashGreen {
-      0% { background: rgba(0,204,51,0.25); }
-      100% { background: var(--card); }
-    }
-
-    @keyframes shakeX {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-4px); }
-      75% { transform: translateX(4px); }
-    }
-
-    .menu {
-      display: grid;
-      gap: 12px;
-      max-width: 420px;
-      margin: 0 auto;
-      width: 100%;
-      justify-items: stretch;
-      text-align: center;
-    }
-
-    .menu .btn {
-      justify-content: center;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      animation: cardIn 0.4s ease-out both;
-    }
-
-    .menu .btn span { display: none; }
-
-    .menu .btn::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 40%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
-      transform: translateX(-120%);
-    }
-
-    .menu .btn:active::after { animation: sweep 0.5s ease-out; }
-
-    .menu .btn:nth-child(1) { animation-delay: 0.02s; }
-    .menu .btn:nth-child(2) { animation-delay: 0.06s; }
-    .menu .btn:nth-child(3) { animation-delay: 0.10s; }
-    .menu .btn:nth-child(4) { animation-delay: 0.14s; }
-    .menu .btn:nth-child(5) { animation-delay: 0.18s; }
-    .menu .btn:nth-child(6) { animation-delay: 0.22s; }
-    .menu .btn:nth-child(7) { animation-delay: 0.26s; }
-
-    .menu .btn:first-child {
-      border-color: rgba(204,0,0,0.55);
-      animation: cardIn 0.4s ease-out both, pulseGlow 3s ease-in-out infinite 0.6s;
-    }
-
-    .menu .btn:active { transform: scale(0.985); }
-
-    .menu .divider { height: 1px; background: #222; margin: 10px 0; width: 100%; }
-
-    .btn {
-      background: var(--card);
-      border: 1px solid var(--border);
-      padding: 20px;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      text-align: left;
-      color: var(--text);
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .btn {
-      transition: transform 0.12s ease-out, background 0.15s ease-out, border-color 0.15s ease-out;
-    }
-
-    .btn:active { background: #222; }
-
-    .btn span { transition: transform 0.15s ease-out; }
-    .btn:active span { transform: translateX(4px); }
-
-    .list { display: flex; flex-direction: column; gap: 10px; }
-
-    .item {
-      padding: 16px;
-      background: var(--card);
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      animation: cardIn 0.35s ease-out both;
-      transition: border-color 0.15s ease-out, transform 0.12s ease-out;
-    }
-
-    .item:active { transform: scale(0.99); border-color: #444; }
-
-    .item.fresh { animation: cardIn 0.35s ease-out both, flashGreen 1.1s ease-out; }
-
-    .item.removing { animation: shakeX 0.25s ease-out both; opacity: 0.4; }
-
-    .delete-btn {
-      background: #330000;
-      color: #ff5555;
-      border: 1px solid #550000;
-      padding: 8px 14px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
-      min-width: 40px;
-      text-align: center;
-    }
-
-    .plus {
-      position: fixed;
-      bottom: 15px;
-      right: 15px;
-      background: var(--red);
-      color: white;
-      border: none;
-      width: 55px;
-      height: 55px;
-      border-radius: 50%;
-      font-size: 30px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-      z-index: 100;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-    .plus:active { transform: scale(0.9); }
-
-    .plus { transition: transform 0.12s ease-out, box-shadow 0.2s ease-out; animation: popIn 0.4s ease-out both 0.1s; }
-
-    .plus.bump { animation: popIn 0.35s ease-out; box-shadow: 0 0 18px var(--red-glow); }
-
-    .back {
-      color: var(--muted);
-      margin-bottom: 20px;
-      display: inline-block;
-      font-size: 14px;
-      font-weight: bold;
-      text-transform: uppercase;
-      text-decoration: none;
-      padding: 10px 0;
-    }
-    .back:active { color: white; }
-
-    .picker { display:flex; gap:8px; margin-top:25px; justify-content: center; align-items: center; }
-    .picker input, .picker select {
-      background: #000;
-      color: white;
-      border: 1px solid var(--border);
-      padding: 12px;
-      border-radius: 6px;
-      font-size: 18px;
-      text-align: center;
-    }
-    .picker input:focus { border-color: var(--red); outline: none; }
-
-    .pb { color: var(--green); font-weight: bold; }
-    .slow { color: #ff5555; font-weight: bold; }
-
-    .stat {
-      padding: 20px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      margin-bottom: 15px;
-      line-height: 1.6;
-    }
-
-    .compute-btn {
-      background: var(--red);
-      color: white;
-      border: none;
-      padding: 16px;
-      border-radius: 8px;
-      width: 100%;
-      font-weight: bold;
-      font-size: 16px;
-      margin-top: 10px;
-      text-transform: uppercase;
-    }
-    .compute-btn:active { opacity: 0.8; transform: scale(0.985); }
-
-    .compute-btn { transition: transform 0.12s ease-out, opacity 0.15s ease-out; }
-
-    .stat { animation: cardIn 0.35s ease-out both; }
-
-    .stat .bar {
-      height: 6px;
-      border-radius: 4px;
-      background: #1c1c1c;
-      overflow: hidden;
-      margin-top: 12px;
-    }
-
-    .stat .bar > i {
-      display: block;
-      height: 100%;
-      width: 0;
-      border-radius: 4px;
-      background: linear-gradient(90deg, var(--red), #ff4444);
-      transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-
-    .stat .bar.gain > i { background: linear-gradient(90deg, #00a82a, var(--green)); }
-
-    .stat .big { font-size: 26px; font-weight: 800; display: inline-block; }
-
-    .stat .big.pop { animation: popIn 0.45s ease-out both; }
-
-    .saved-type { font-size: 12px; color: var(--red); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display:block; }
-    .saved-dates { font-size: 13px; color: var(--muted); margin-top: 4px; display:block; }
-    .saved-main { font-size: 18px; font-weight: bold; }
-
-
-    /* ── LIQUID GLASS REDESIGN ─────────────────────────────────────── */
-    :root {
-      color-scheme: dark;
-      --bg: #080a10;
-      --card: rgba(255,255,255,.055);
-      --border: rgba(255,255,255,.13);
-      --red: #ff3b48;
-      --red-glow: rgba(255,59,72,.25);
-      --green: #67f5a7;
-      --text: #f6f7fb;
-      --muted: #9ba3b3;
-      --glass: rgba(255,255,255,.065);
-      --glass-deep: rgba(18,21,30,.72);
-    }
-
-    html { min-height: 100%; background: var(--bg); scroll-behavior: smooth; }
-    body {
-      position: relative;
-      isolation: isolate;
-      min-height: 100vh;
-      min-height: 100dvh;
-      background: #080a10;
-      color: var(--text);
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-    }
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      background:
-        radial-gradient(ellipse at 12% 4%, rgba(255,48,64,.18), transparent 34%),
-        radial-gradient(ellipse at 93% 28%, rgba(78,101,190,.16), transparent 33%),
-        radial-gradient(ellipse at 55% 100%, rgba(255,255,255,.055), transparent 42%),
-        linear-gradient(145deg, #080a10 0%, #10121b 50%, #07080d 100%);
-    }
-    body > header { z-index: 50; }
-    body > .container { position: relative; z-index: 1; }
-
-    header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 15px 20px 13px;
-      background: rgba(13,15,23,.66);
-      border-bottom: 1px solid rgba(255,255,255,.11);
-      box-shadow: 0 10px 36px rgba(0,0,0,.12), inset 0 1px rgba(255,255,255,.1);
-      -webkit-backdrop-filter: blur(28px) saturate(165%);
-      backdrop-filter: blur(28px) saturate(165%);
-      font-size: 14px;
-      letter-spacing: 2.3px;
-    }
-    header::after {
-      content: "SIM RACING  •  DRIVER DEVELOPMENT";
-      color: rgba(220,225,238,.55);
-      font-size: 8px;
-      line-height: 1.4;
-      font-weight: 700;
-      letter-spacing: 2px;
-    }
-
-    .container { max-width: 660px; padding: 22px 17px calc(120px + env(safe-area-inset-bottom)); }
-    .view { animation: viewIn .32s cubic-bezier(.2,.7,.2,1) both; }
-
-    .dashboard-intro { padding: 18px 5px 25px; }
-    .eyebrow {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #ff7d86;
-      font-size: 9px;
-      line-height: 1.4;
-      font-weight: 800;
-      letter-spacing: 2.1px;
-    }
-    .status-dot {
-      display: inline-block;
-      width: 6px;
-      height: 6px;
-      flex: 0 0 6px;
-      border-radius: 50%;
-      background: var(--red);
-      box-shadow: 0 0 12px rgba(255,59,72,.8);
-    }
-    .dashboard-intro h1 {
-      margin: 17px 0 10px;
-      font-size: clamp(30px, 8vw, 43px);
-      line-height: 1.06;
-      letter-spacing: -1.7px;
-      font-weight: 800;
-    }
-    .dashboard-intro h1 span {
-      color: transparent;
-      background: linear-gradient(100deg, #fff 3%, #ffc4c8 48%, #ff4958 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-    }
-    .dashboard-intro p { max-width: 330px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
-
-    .menu { max-width: none; gap: 11px; text-align: left; }
-    .menu .btn {
-      min-height: 78px;
-      padding: 14px 14px;
-      gap: 13px;
-      justify-content: flex-start;
-      text-align: left;
-      border-radius: 19px;
-      background: linear-gradient(130deg, rgba(255,255,255,.095), rgba(255,255,255,.025) 70%);
-      border: 1px solid rgba(255,255,255,.13);
-      box-shadow: inset 0 1px rgba(255,255,255,.12), 0 9px 24px rgba(0,0,0,.12);
-      -webkit-backdrop-filter: blur(22px) saturate(155%);
-      backdrop-filter: blur(22px) saturate(155%);
-      animation: cardIn .42s cubic-bezier(.2,.7,.2,1) both;
-    }
-    .menu .btn:first-child {
-      border-color: rgba(255,85,98,.4);
-      background: linear-gradient(120deg, rgba(255,57,72,.16), rgba(255,255,255,.045) 72%);
-      box-shadow: inset 0 1px rgba(255,255,255,.16), 0 10px 30px rgba(255,35,52,.06);
-      animation: cardIn .42s cubic-bezier(.2,.7,.2,1) both, pulseGlow 3.8s ease-in-out infinite .6s;
-    }
-    .menu .btn span { display: block; }
-    .menu-icon {
-      display: grid !important;
-      place-items: center;
-      width: 43px;
-      height: 43px;
-      flex: 0 0 43px;
-      color: #ff7b85;
-      font-size: 22px;
-      line-height: 1;
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 14px;
-      background: linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.035));
-      box-shadow: inset 0 1px rgba(255,255,255,.13), 0 4px 12px rgba(0,0,0,.14);
-    }
-    .menu-copy { min-width: 0; display: flex !important; flex-direction: column; gap: 5px; flex: 1; }
-    .menu-copy strong { font-size: 12px; font-weight: 800; letter-spacing: 1.15px; line-height: 1.2; }
-    .menu-copy small { color: var(--muted); font-size: 11px; font-weight: 400; letter-spacing: 0; line-height: 1.35; }
-    .btn-arrow {
-      display: grid !important;
-      place-items: center;
-      width: 28px;
-      height: 28px;
-      flex: 0 0 28px;
-      margin-left: auto;
-      color: rgba(241,244,251,.65);
-      font-size: 16px;
-      border: 1px solid rgba(255,255,255,.1);
-      background: rgba(255,255,255,.04);
-      border-radius: 50%;
-      transition: transform .2s ease, color .2s ease;
-    }
-    .menu .btn:hover .btn-arrow { transform: translate(2px,-2px); color: white; }
-    .menu .btn:active { transform: scale(.985); }
-    .menu .btn::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); }
-    .menu .divider {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      height: auto;
-      margin: 12px 2px 4px;
-      background: none;
-      color: rgba(190,197,212,.55);
-      font-size: 9px;
-      font-weight: 800;
-      letter-spacing: 2px;
-      text-align: left;
-    }
-    .menu .divider::after { content: ""; height: 1px; flex: 1; background: linear-gradient(90deg, rgba(255,255,255,.15), transparent); }
-    .menu .secondary-action { min-height: 70px; }
-    .menu .secondary-action .menu-icon { color: #c0c9ff; }
-    .menu .danger-action { min-height: 66px; margin-top: 5px; border-color: rgba(255,81,94,.16); background: rgba(255,59,72,.035); }
-    .menu .danger-action .menu-icon { color: #ff6672; border-color: rgba(255,81,94,.18); background: rgba(255,59,72,.07); }
-    .menu .danger-action .menu-copy strong { color: #ff929a; }
-    .menu .danger-action .menu-copy small { color: rgba(255,160,166,.6); }
-
-    .btn, .item, .stat {
-      color: var(--text);
-      border-color: rgba(255,255,255,.13);
-      background: linear-gradient(135deg, rgba(255,255,255,.075), rgba(255,255,255,.028));
-      box-shadow: inset 0 1px rgba(255,255,255,.09), 0 8px 24px rgba(0,0,0,.1);
-      -webkit-backdrop-filter: blur(22px) saturate(155%);
-      backdrop-filter: blur(22px) saturate(155%);
-    }
-    .btn {
-      border-radius: 16px;
-      border-width: 1px;
-      padding: 17px;
-      min-height: 58px;
-      transition: transform .16s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
-    }
-    .btn:hover { border-color: rgba(255,255,255,.23); }
-    .btn:active { background: rgba(255,255,255,.095); transform: scale(.99); }
-    .list { gap: 11px; }
-    .list > .btn { text-align: left; }
-    .item {
-      position: relative;
-      overflow: hidden;
-      gap: 14px;
-      padding: 17px;
-      border-radius: 17px;
-      border: 1px solid rgba(255,255,255,.12);
-    }
-    .item::before, .stat::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 12%;
-      right: 12%;
-      height: 1px;
-      pointer-events: none;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
-    }
-    .item:active { border-color: rgba(255,255,255,.26); }
-    .item.fresh { animation: cardIn .35s ease-out both, flashGreen 1.1s ease-out; }
-    .delete-btn {
-      flex: 0 0 auto;
-      min-width: 38px;
-      min-height: 38px;
-      padding: 8px 11px;
-      border: 1px solid rgba(255,91,103,.22);
-      border-radius: 12px;
-      color: #ff8790;
-      background: linear-gradient(145deg, rgba(255,59,72,.16), rgba(255,255,255,.035));
-      box-shadow: inset 0 1px rgba(255,255,255,.09);
-      -webkit-backdrop-filter: blur(14px);
-      backdrop-filter: blur(14px);
-    }
-    .plus {
-      position: fixed;
-      bottom: calc(20px + env(safe-area-inset-bottom));
-      right: max(18px, calc((100vw - 660px) / 2 + 18px));
-      width: 60px;
-      height: 60px;
-      border: 1px solid rgba(255,255,255,.28);
-      border-radius: 21px;
-      background: linear-gradient(145deg, rgba(255,86,97,.98), rgba(198,15,33,.92));
-      box-shadow: inset 0 1px rgba(255,255,255,.35), 0 9px 30px rgba(255,36,54,.3), 0 4px 12px rgba(0,0,0,.28);
-      -webkit-backdrop-filter: blur(20px) saturate(160%);
-      backdrop-filter: blur(20px) saturate(160%);
-      font-size: 31px;
-    }
-    .plus:active { transform: scale(.92); }
-    .back {
-      position: relative;
-      padding: 9px 13px;
-      margin: 0 0 22px;
-      color: #d3d7e1;
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 100px;
-      background: rgba(255,255,255,.05);
-      -webkit-backdrop-filter: blur(16px);
-      backdrop-filter: blur(16px);
-      font-size: 11px;
-      letter-spacing: 1px;
-      transition: background .2s ease, color .2s ease;
-    }
-    .back:hover { color: white; background: rgba(255,255,255,.09); }
-
-    input:not([type="checkbox"]), select, textarea {
-      color: var(--text);
-      border: 1px solid rgba(255,255,255,.15) !important;
-      border-radius: 13px !important;
-      background: rgba(255,255,255,.055) !important;
-      box-shadow: inset 0 1px rgba(255,255,255,.055);
-      -webkit-backdrop-filter: blur(18px) saturate(150%);
-      backdrop-filter: blur(18px) saturate(150%);
-      outline: none;
-      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
-    }
-    input:not([type="checkbox"]):focus, select:focus, textarea:focus {
-      border-color: rgba(255,91,104,.72) !important;
-      box-shadow: 0 0 0 3px rgba(255,59,72,.1), inset 0 1px rgba(255,255,255,.07);
-    }
-    input::placeholder { color: rgba(190,197,212,.52); }
-    select option { background: #171923; color: #f6f7fb; }
-    .picker {
-      flex-wrap: wrap;
-      gap: 9px;
-      margin-top: 25px;
-      padding: 14px 10px;
-      border: 1px solid rgba(255,255,255,.12);
-      border-radius: 19px;
-      background: rgba(255,255,255,.045);
-      box-shadow: inset 0 1px rgba(255,255,255,.07);
-      -webkit-backdrop-filter: blur(22px) saturate(145%);
-      backdrop-filter: blur(22px) saturate(145%);
-    }
-    .picker input, .picker select { padding: 12px 8px; font-size: 17px; }
-    .compute-btn {
-      min-height: 56px;
-      padding: 16px 18px;
-      border: 1px solid rgba(255,255,255,.2);
-      border-radius: 16px;
-      background: linear-gradient(120deg, #ff4654, #d8192c 72%, #b80d22);
-      box-shadow: inset 0 1px rgba(255,255,255,.28), 0 8px 24px rgba(226,25,45,.2);
-      letter-spacing: 1px;
-      -webkit-backdrop-filter: blur(16px);
-      backdrop-filter: blur(16px);
-    }
-    .compute-btn:active { opacity: .9; transform: scale(.99); }
-    .stat {
-      position: relative;
-      overflow: hidden;
-      padding: 21px;
-      border: 1px solid rgba(255,255,255,.14);
-      border-radius: 20px;
-      line-height: 1.75;
-    }
-    .stat hr { border-top-color: rgba(255,255,255,.12) !important; }
-    .stat .bar { height: 7px; background: rgba(255,255,255,.08); border-radius: 99px; }
-    .stat .bar > i { border-radius: 99px; box-shadow: 0 0 14px rgba(255,59,72,.23); }
-    .stat .bar.gain > i { box-shadow: 0 0 14px rgba(103,245,167,.2); }
-    .stat .big { letter-spacing: -.8px; }
-    .pb { color: var(--green); }
-    .slow { color: #ff818b; }
-    .saved-type { letter-spacing: 1.5px; font-size: 9px; font-weight: 800; }
-    .saved-main { font-size: 16px; line-height: 1.5; }
-    .saved-dates { line-height: 1.5; }
-    .clear-history {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      margin-top: 18px;
-      color: var(--muted);
-      font-size: 13px;
-    }
-    .clear-history span { font-size: 18px; }
-
-    :focus-visible { outline: 2px solid rgba(255,105,116,.9); outline-offset: 3px; }
-    button { touch-action: manipulation; }
-    @media (min-width: 600px) {
-      .container { padding-top: 30px; }
-      .dashboard-intro { padding-top: 24px; padding-bottom: 30px; }
-      .menu { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-      .menu .btn { min-height: 106px; align-items: flex-start; flex-wrap: wrap; }
-      .menu .menu-icon { width: 38px; height: 38px; flex-basis: 38px; }
-      .menu .menu-copy { flex-basis: calc(100% - 58px); }
-      .menu .btn-arrow { position: absolute; right: 13px; top: 13px; width: 24px; height: 24px; }
-      .menu .divider { grid-column: 1 / -1; }
-      .menu .danger-action { margin-top: 0; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
-    }
-
-  </style>
+/* toast + modal */
+#toastWrap{position:fixed;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 68px);z-index:200;display:flex;justify-content:center;pointer-events:none}
+.toast{pointer-events:auto;display:flex;align-items:center;gap:8px;max-width:calc(100% - 28px);padding:4px 6px 4px 18px;min-height:48px;border-radius:18px;font-size:14px;font-weight:600;animation:popIn .4s ease-out both}
+.toast button{min-width:44px;min-height:44px;padding:0 12px;background:none;border:0;color:#ff929a;font-weight:800;font-size:13px}
+.toast.pb{padding-right:18px;color:#eafff3;border-color:rgba(103,245,167,.45);background:linear-gradient(120deg,rgba(103,245,167,.2),rgba(255,255,255,.05));box-shadow:inset 0 1px rgba(255,255,255,.14),0 0 28px rgba(103,245,167,.22)}
+.scrim{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(4,5,9,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.panel{width:min(380px,calc(100% - 40px));padding:24px;border-radius:24px;background:rgba(18,21,30,.82);animation:popIn .35s ease-out both}
+.panel h3{margin:0 0 8px;font-size:19px;letter-spacing:-.3px}.panel p{margin:0 0 22px;color:var(--muted);font-size:14px;line-height:1.6}
+.mrow{display:flex;gap:10px}
+.mbtn{flex:1;min-height:48px;border-radius:14px;font-weight:700;font-size:14px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07)}
+.mbtn.ok{border-color:rgba(255,255,255,.25);background:linear-gradient(120deg,#ff4654,#d8192c 72%,#b80d22);color:#fff;box-shadow:inset 0 1px rgba(255,255,255,.28)}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
 </head>
 <body>
 
-<header id="headerTitle">LMU TRACKER</header>
+<header>
+  <button id="backBtn" class="iconback off" aria-label="Back" onclick="goBack()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button>
+  <div class="htext"><small id="hLabel">LMU Tracker</small><b id="hTitle">Laps</b></div>
+  <span class="hspace"></span>
+</header>
 
 <div class="container">
-    <div id="menu" class="view hidden">
-        <section class="dashboard-intro" aria-label="Dashboard introduction">
-            <div class="eyebrow"><span class="status-dot"></span> DRIVER DEVELOPMENT / LMU</div>
-            <h1>Find your next<br><span> tenth of a second.</span></h1>
-            <p>Your pace, consistency and race progress — all in one cockpit.</p>
-        </section>
-        <div class="menu">
-            <button class="btn" onclick="navigateTo('tracks')">
-                <span class="menu-icon" aria-hidden="true">◷</span>
-                <span class="menu-copy"><strong>LAP RECORDS</strong><small>Save and compare your fastest laps</small></span>
-                <span class="btn-arrow" aria-hidden="true">↗</span>
-            </button>
-            <button class="btn" onclick="navigateTo('consistency')">
-                <span class="menu-icon" aria-hidden="true">◎</span>
-                <span class="menu-copy"><strong>CONSISTENCY</strong><small>Review your race finishes</small></span>
-                <span class="btn-arrow" aria-hidden="true">↗</span>
-            </button>
-            <button class="btn" onclick="navigateTo('trackProgress')">
-                <span class="menu-icon" aria-hidden="true">↗</span>
-                <span class="menu-copy"><strong>TRACK PROGRESS</strong><small>Measure pace changes by circuit</small></span>
-                <span class="btn-arrow" aria-hidden="true">↗</span>
-            </button>
-            <button class="btn" onclick="navigateTo('globalProgress')">
-                <span class="menu-icon" aria-hidden="true">⌁</span>
-                <span class="menu-copy"><strong>OVERALL PROGRESS</strong><small>See your bigger racing picture</small></span>
-                <span class="btn-arrow" aria-hidden="true">↗</span>
-            </button>
-            <div class="divider"><span>YOUR DATA</span></div>
-            <button class="btn secondary-action" onclick="navigateTo('savedProgression')">
-                <span class="menu-icon" aria-hidden="true">▤</span>
-                <span class="menu-copy"><strong>SAVED PROGRESSION</strong><small>Revisit previous comparisons</small></span>
-                <span class="btn-arrow" aria-hidden="true">↗</span>
-            </button>
-            <button class="btn danger-action" onclick="resetAllData()">
-                <span class="menu-icon" aria-hidden="true">↺</span>
-                <span class="menu-copy"><strong>RESET ALL DATA</strong><small>Clear saved laps and race history</small></span>
-                <span class="btn-arrow" aria-hidden="true">↗</span>
-            </button>
-        </div>
-    </div>
+  <div id="tracks" class="view hidden"><div id="trackList" class="list"></div></div>
 
-    <div id="tracks" class="view hidden">
-        <a class="back" onclick="goBack()">← Back</a>
-        <div id="trackList" class="list"></div>
-    </div>
+  <div id="records" class="view hidden">
+    <div id="pbCard" class="pbcard"></div>
+    <div id="recordsList" class="list"></div>
+  </div>
 
-    <div id="records" class="view hidden">
-        <a class="back" onclick="goBack()">← Back</a>
-        <h2 id="currentTrackTitle" style="margin:0 0 15px 0; font-size: 22px; color:#fff;"></h2>
-        <div id="recordsList" class="list"></div>
+  <div id="raceFinish" class="view hidden"><div id="finishList" class="list"></div></div>
 
-        <div class="picker">
-            <input type="number" id="minutes" placeholder="m" style="width:60px" inputmode="numeric">
-            <span style="font-size:20px;">:</span>
-            <input type="number" id="seconds" placeholder="s" style="width:60px" inputmode="numeric">
-            <span style="font-size:20px;">.</span>
-            <input type="number" id="milliseconds" placeholder="ms" style="width:70px" inputmode="numeric">
-        </div>
-        <button class="plus" onclick="addLap()">+</button>
-    </div>
+  <div id="progress" class="view hidden">
+    <h2 class="sec">Track pace</h2>
+    <div class="field"><label class="lbl" for="progressTrack">Select track</label><select id="progressTrack"></select></div>
+    <div class="field"><label class="lbl" for="trackDays">Time period (days)</label><input type="number" id="trackDays" value="30" inputmode="numeric"></div>
+    <button class="compute-btn" onclick="computeTrackProgress()">See track progress</button>
+    <div id="trackProgressResult" style="margin-top:20px"></div>
+    <h2 class="sec">Overall finishes</h2>
+    <div class="field"><label class="lbl" for="globalDays">Time period (days)</label><input type="number" id="globalDays" value="30" inputmode="numeric"></div>
+    <button class="compute-btn" onclick="computeGlobalProgress()">See overall progress</button>
+    <div id="globalProgressResult" style="margin-top:20px"></div>
+  </div>
 
-    <div id="consistency" class="view hidden">
-        <a class="back" onclick="goBack()">← Back</a>
-        <button class="btn" onclick="navigateTo('raceFinish')">RACE FINISHES <span>›</span></button>
-    </div>
-
-    <div id="raceFinish" class="view hidden">
-        <a class="back" onclick="goBack()">← Back</a>
-        <div id="finishList" class="list"></div>
-        <div class="picker">
-            <input type="number" id="position" placeholder="Finish Position (P)" style="width:100%" inputmode="numeric">
-        </div>
-        <button class="plus" onclick="addFinish()">+</button>
-    </div>
-
-    <div id="trackProgress" class="view hidden">
-        <a class="back" onclick="goBack()">← Back</a>
-        <div style="margin-bottom:20px;">
-            <label style="color:#aaa; font-size:14px; margin-bottom:5px; display:block;">Select Track:</label>
-            <select id="progressTrack" style="width:100%;"></select>
-        </div>
-        <div style="margin-bottom:20px;">
-             <label style="color:#aaa; font-size:14px; margin-bottom:5px; display:block;">Time Period (Days):</label>
-            <input type="number" id="trackDays" value="30" style="width:100%;" inputmode="numeric">
-        </div>
-        <button class="compute-btn" onclick="computeTrackProgress()">SEE PROGRESS</button>
-        <div id="trackProgressResult" style="margin-top:20px;"></div>
-    </div>
-
-    <div id="globalProgress" class="view hidden">
-        <a class="back" onclick="goBack()">← Back</a>
-        <div style="margin-bottom:20px;">
-            <label style="color:#aaa; font-size:14px; margin-bottom:5px; display:block;">Time Period (Days):</label>
-            <input type="number" id="globalDays" value="30" style="width:100%;" inputmode="numeric">
-        </div>
-        <button class="compute-btn" onclick="computeGlobalProgress()">SEE PROGRESS</button>
-        <div id="globalProgressResult" style="margin-top:20px;"></div>
-    </div>
-
-    <div id="savedProgression" class="view hidden">
-        <a class="back" onclick="goBack()">← Back</a>
-        <div style="margin-bottom:15px; color:#aaa; font-size:14px;">History of all comparisons calculated:</div>
-        <div id="savedList" class="list"></div>
-        <button class="btn clear-history" onclick="clearSaved()">Clear saved history <span aria-hidden="true">↺</span></button>
-    </div>
+  <div id="savedProgression" class="view hidden">
+    <div id="savedList" class="list"></div>
+    <button class="btn" style="margin-top:18px" onclick="clearSaved()">Clear saved history <span aria-hidden="true">↺</span></button>
+    <button class="btn danger" onclick="resetAllData()"><span>Reset all data<br><small style="font-weight:400;opacity:.7">Clear saved laps, race history and comparisons</small></span><span aria-hidden="true">↺</span></button>
+  </div>
 </div>
 
+<div id="lapBar" class="actionbar"><div class="abin">
+  <div class="adjrow">
+    <button class="adj" onclick="adjust(-100)" aria-label="Minus 0.1 seconds">−0.1</button>
+    <button class="adj" onclick="adjust(-10)" aria-label="Minus 0.01 seconds">−0.01</button>
+    <button class="adj" onclick="adjust(10)" aria-label="Plus 0.01 seconds">+0.01</button>
+    <button class="adj" onclick="adjust(100)" aria-label="Plus 0.1 seconds">+0.1</button>
+  </div>
+  <div class="inrow"><input id="lapInput" type="text" inputmode="decimal" autocomplete="off" placeholder="1:58.432" aria-label="Lap time" aria-describedby="lapMsg"><button class="addbtn" onclick="addLap()">Add</button></div>
+  <div id="lapMsg" class="msg" aria-live="polite"></div>
+</div></div>
+
+<div id="finBar" class="actionbar"><div class="abin">
+  <div class="inrow"><input id="posInput" type="number" inputmode="numeric" min="1" placeholder="Finish position (P)" aria-label="Finish position" aria-describedby="finMsg"><button class="addbtn" onclick="addFinish()">Add</button></div>
+  <div id="finMsg" class="msg" aria-live="polite"></div>
+</div></div>
+
+<nav class="tabbar" aria-label="Main"><div class="tabs">
+  <button class="tab" data-v="tracks" onclick="setTab('tracks')"><i aria-hidden="true">◷</i>Laps</button>
+  <button class="tab" data-v="raceFinish" onclick="setTab('raceFinish')"><i aria-hidden="true">⚑</i>Races</button>
+  <button class="tab" data-v="progress" onclick="setTab('progress')"><i aria-hidden="true">↗</i>Progress</button>
+  <button class="tab" data-v="savedProgression" onclick="setTab('savedProgression')"><i aria-hidden="true">▤</i>History</button>
+</div></nav>
+
+<div id="toastWrap"></div>
+
+<div id="modal" class="scrim hidden"><div class="panel" role="dialog" aria-modal="true" aria-labelledby="mTitle" aria-describedby="mText">
+  <h3 id="mTitle"></h3><p id="mText"></p>
+  <div class="mrow"><button id="mCancel" class="mbtn" onclick="closeModal(false)">Cancel</button><button id="mOk" class="mbtn ok" onclick="closeModal(true)">Confirm</button></div>
+</div></div>
+
 <script>
-    const LMU_TRACKS = ["Bahrain", "Fuji", "Imola", "Interlagos", "COTA", "Le Mans", "Monza", "Portimão", "Qatar", "Sebring", "Silverstone", "Spa-Francorchamps", "Barcelona-Catalunya", "Paul Ricard", "Daytona", "Laguna Seca", "Road Atlanta", "Long Beach"];
-    const MAX_SAVED = 100;
+const LMU_TRACKS = ["Bahrain","Fuji","Imola","Interlagos","COTA","Le Mans","Monza","Portimão","Qatar","Sebring","Silverstone","Spa-Francorchamps","Barcelona-Catalunya","Paul Ricard","Daytona","Laguna Seca","Road Atlanta","Long Beach"];
+const MAX_SAVED = 100, KEY = 'simTrackerLMU';
+const $ = id => document.getElementById(id);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 
-    let currentTrack = null;
-    let navigationStack = ['menu'];
+// --- STORAGE + MIGRATION (old shape -> same shape plus stable ids, nothing removed) ---
+let db; try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+db = db || {}; db.laps = db.laps || {}; db.finishes = db.finishes || []; db.saved = db.saved || [];
+Object.values(db.laps).forEach(a => a.forEach(l => { l.id = l.id || uid(); }));
+db.finishes.forEach(f => { f.id = f.id || uid(); });
+db.saved.forEach(s => { s.id = s.id || uid(); });
+function save() { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} }
+save();
 
-    let db = JSON.parse(localStorage.getItem('simTrackerLMU')) || { laps: {}, finishes: [], saved: [] };
-    if (!db.saved) { db.saved = []; }
+let currentTrack = null, stack = ['tracks'];
 
-    function save() { localStorage.setItem('simTrackerLMU', JSON.stringify(db)); }
+// --- NAVIGATION ---
+const HEAD = { tracks:['LMU Tracker','Laps'], raceFinish:['LMU Tracker','Races'], progress:['LMU Tracker','Progress'], savedProgression:['LMU Tracker','History'], records:['Lap records',null] };
+function setTab(v) { stack = [v]; renderView(v); }                      // tab = new root, stack reset
+function navigateTo(v, track) { if (track) currentTrack = track; stack.push(v); renderView(v); }
+function goBack() { if (stack.length > 1) { stack.pop(); renderView(stack[stack.length - 1]); } }  // no-op at root
 
-    // --- NAVIGATION LOGIC ---
-    function navigateTo(viewId, trackName = null) {
-        if (trackName) currentTrack = trackName;
-        navigationStack.push(viewId);
-        renderView(viewId);
-    }
+function renderView(v) {
+  document.querySelectorAll('.view').forEach(x => x.classList.add('hidden'));
+  const el = $(v); el.classList.remove('hidden');
+  el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+  ({ tracks:renderTrackList, records:renderRecords, raceFinish:renderFinishes, progress:populateTrackSelect, savedProgression:renderSaved })[v]();
+  const h = HEAD[v]; $('hLabel').textContent = h[0]; $('hTitle').textContent = h[1] || currentTrack;
+  $('backBtn').classList.toggle('off', stack.length < 2);
+  document.querySelectorAll('.tab').forEach(t => { const on = t.dataset.v === stack[0]; t.classList.toggle('on', on); on ? t.setAttribute('aria-current','page') : t.removeAttribute('aria-current'); });
+  document.body.classList.toggle('bl', v === 'records');
+  document.body.classList.toggle('bf', v === 'raceFinish');
+  window.scrollTo(0, 0); animateBars();
+}
 
-    function goBack() {
-        if (navigationStack.length > 1) {
-            navigationStack.pop();
-            const prevView = navigationStack[navigationStack.length - 1];
-            renderView(prevView);
-        }
-    }
+// swipe right = back (ignores inputs, vertical scrolls, modal)
+let g = null;
+document.addEventListener('touchstart', e => { const t = e.touches[0]; g = (e.touches.length === 1 && !e.target.closest('input,select,textarea,.scrim')) ? { x:t.clientX, y:t.clientY, dx:0, dy:0 } : null; }, { passive:true });
+document.addEventListener('touchmove', e => { if (!g) return; const t = e.touches[0]; g.dx = t.clientX - g.x; g.dy = t.clientY - g.y; if (Math.abs(g.dy) > 30 && Math.abs(g.dy) > Math.abs(g.dx)) g = null; }, { passive:true });
+document.addEventListener('touchend', () => { if (g && g.dx > 60 && g.dx > Math.abs(g.dy) * 2) goBack(); g = null; });
+document.addEventListener('touchcancel', () => { g = null; });
 
-    function renderView(viewId) {
-        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-        const activeView = document.getElementById(viewId);
-        activeView.classList.remove('hidden');
-        activeView.style.animation = 'none';
-        void activeView.offsetWidth;
-        activeView.style.animation = '';
+// --- HELPERS ---
+function formatTime(ms) {
+  if (!ms) return "--:--.---";
+  const m = Math.floor(ms / 60000), s = Math.floor((ms % 60000) / 1000), mm = ms % 1000;
+  return `${m}:${s.toString().padStart(2,'0')}.${mm.toString().padStart(3,'0')}`;
+}
+function formatDateRange(days) { const end = new Date(), start = new Date(); start.setDate(end.getDate() - days); return `${start.toLocaleDateString()} to ${end.toLocaleDateString()}`; }
+function signedDelta(d) { return `${d > 0 ? '+' : '-'}${formatTime(Math.abs(d))}`; }
+const secs = d => `${d < 0 ? '−' : '+'}${(Math.abs(d) / 1000).toFixed(3)}s`;
+const bestOf = t => { const a = db.laps[t] || []; return a.length ? Math.min(...a.map(l => l.time)) : null; };  // all-time PB
 
-        if (viewId === 'tracks') renderTrackList();
-        if (viewId === 'records') renderRecords();
-        if (viewId === 'raceFinish') renderFinishes();
-        if (viewId === 'trackProgress') populateTrackSelect();
-        if (viewId === 'savedProgression') renderSavedProgression();
+// --- FEEDBACK: toast / undo / modal ---
+let tT;
+function toast(msg, o = {}) {
+  const w = $('toastWrap'); clearTimeout(tT); w.innerHTML = '';
+  const t = document.createElement('div'); t.className = 'toast' + (o.pb ? ' pb' : ''); t.setAttribute('role', 'status');
+  const s = document.createElement('span'); s.textContent = msg; t.appendChild(s);
+  if (o.undo) { const b = document.createElement('button'); b.textContent = 'Undo'; b.onclick = () => { o.undo(); w.innerHTML = ''; clearTimeout(tT); }; t.appendChild(b); }
+  w.appendChild(t); tT = setTimeout(() => { w.innerHTML = ''; }, o.pb ? 4500 : 5000);
+}
+function removeItem(arr, id, redraw) {
+  const i = arr.findIndex(x => x.id === id); if (i < 0) return;
+  const [it] = arr.splice(i, 1); save(); redraw();
+  toast('Deleted', { undo: () => { arr.splice(i, 0, it); save(); redraw(); } });
+}
+let mResolve, mPrev;
+function askConfirm(title, text, ok) {
+  return new Promise(res => { mResolve = res; mPrev = document.activeElement; $('mTitle').textContent = title; $('mText').textContent = text; $('mOk').textContent = ok; $('modal').classList.remove('hidden'); $('mCancel').focus(); });
+}
+function closeModal(v) { $('modal').classList.add('hidden'); if (mPrev && mPrev.focus) mPrev.focus(); const r = mResolve; mResolve = null; if (r) r(v); }
+document.addEventListener('keydown', e => {
+  if ($('modal').classList.contains('hidden')) return;
+  if (e.key === 'Escape') { e.preventDefault(); closeModal(false); }
+  if (e.key === 'Tab') { e.preventDefault(); const b = [$('mCancel'), $('mOk')], i = b.indexOf(document.activeElement); b[(i + (e.shiftKey ? -1 : 1) + 2) % 2].focus(); }
+});
+$('modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(false); });
+function fieldErr(msgId, inputId, text) {
+  $(msgId).textContent = text; const i = $(inputId); i.classList.remove('invalid');
+  if (text) { void i.offsetWidth; i.classList.add('invalid'); i.setAttribute('aria-invalid', 'true'); } else i.removeAttribute('aria-invalid');
+}
 
-        const titles = {
-            'menu': 'LMU TRACKER', 'tracks': 'SELECT TRACK', 'consistency': 'CONSISTENCY',
-            'trackProgress': 'TRACK PROGRESS', 'globalProgress': 'OVERALL', 'savedProgression': 'SAVED HISTORY',
-            'raceFinish': 'RACE FINISHES', 'records': 'LAP RECORDS'
-        };
-        document.getElementById('headerTitle').innerText = titles[viewId] || currentTrack || 'LMU TRACKER';
-        window.scrollTo(0,0);
-    }
+// --- TRACKS ---
+function renderTrackList() {
+  const l = $('trackList'); l.innerHTML = '';
+  LMU_TRACKS.forEach((t, i) => {
+    const pb = bestOf(t), b = document.createElement('button');
+    b.className = 'btn'; b.style.setProperty('--i', Math.min(i, 10));
+    b.innerHTML = `<span>${t}</span><span class="mono ${pb ? 'pb' : 'dim'}">${pb ? formatTime(pb) : '›'}</span>`;
+    b.onclick = () => navigateTo('records', t); l.appendChild(b);
+  });
+}
 
-    // --- HELPERS ---
-    function formatTime(ms) {
-        if (!ms) return "--:--.---";
-        const m = Math.floor(ms / 60000);
-        const s = Math.floor((ms % 60000) / 1000);
-        const mm = ms % 1000;
-        return `${m}:${s.toString().padStart(2, '0')}.${mm.toString().padStart(3, '0')}`;
-    }
+// --- TIME PARSING ---
+function parseTime(raw) {
+  const t = raw.trim().replace(',', '.'); let m = 0, s = 0, f = '0', x;
+  if (!t) return { err: 'Enter a lap time, e.g. 1:58.432' };
+  if ((x = t.match(/^(\d+):(\d{1,2})(?:\.(\d{1,3}))?$/))) { m = +x[1]; s = +x[2]; f = x[3] || '0'; }
+  else if ((x = t.match(/^(\d{1,2})(?:\.(\d{1,3}))?$/))) { s = +x[1]; f = x[2] || '0'; }
+  else if (/^\d{3,}$/.test(t)) { f = t.slice(-3); s = +t.slice(-5, -3) || 0; m = +t.slice(0, -5) || 0; }
+  else return { err: 'Use m:ss.mmm — e.g. 1:58.432, 58.432 or 158432' };
+  if (s >= 60) return { err: 'Seconds must be under 60' };
+  const ms = m * 60000 + s * 1000 + (+f.padEnd(3, '0'));
+  return ms > 0 ? { ms } : { err: 'Lap time must be above zero' };
+}
+function adjust(d) {
+  const inp = $('lapInput'); let r = parseTime(inp.value);
+  if (r.err) {
+    const last = (db.laps[currentTrack] || []).slice(-1)[0];
+    if (!inp.value.trim() && last) r = { ms: last.time }; else return fieldErr('lapMsg', 'lapInput', r.err);
+  }
+  inp.value = formatTime(Math.max(1, r.ms + d)); fieldErr('lapMsg', 'lapInput', '');
+}
 
-    function formatDateRange(days) {
-        const end = new Date();
-        const start = new Date();
-        start.setDate(end.getDate() - days);
-        return `${start.toLocaleDateString()} to ${end.toLocaleDateString()}`;
-    }
+// --- LAP RECORDS ---
+function renderRecords(still) {
+  const laps = db.laps[currentTrack] || [], pb = bestOf(currentTrack);
+  $('pbCard').innerHTML = pb
+    ? `<div><span class="badge">ALL-TIME PB</span><div class="t">${formatTime(pb)}</div></div><small class="dim">${laps.length} lap${laps.length > 1 ? 's' : ''}</small>`
+    : `<div><span class="badge off">NO PB YET</span><div class="t dim">--:--.---</div></div>`;
+  const l = $('recordsList'); l.className = 'list' + (still ? ' still' : '');
+  if (!laps.length) { l.innerHTML = `<div class="empty">No laps yet — add your first ${currentTrack} lap<br><button class="btn" onclick="$('lapInput').focus()">Enter lap time</button></div>`; return; }
+  l.innerHTML = '';
+  [...laps].sort((a, b) => a.time - b.time).forEach((x, i) => {
+    const d = document.createElement('div'); d.className = 'item'; d.dataset.lapId = x.id; d.style.setProperty('--i', Math.min(i, 10));
+    const isPb = x.time === pb;
+    d.innerHTML = `<div><span class="mono big ${isPb ? 'pb' : ''}">${formatTime(x.time)}</span>${isPb ? ' <span class="badge sm">PB</span>' : ''}<br><small class="dim">${new Date(x.date).toLocaleDateString()}</small></div><button class="delete-btn" aria-label="Delete lap" onclick="delLap('${x.id}')">✕</button>`;
+    l.appendChild(d);
+  });
+}
+function highlight(attr, id) {
+  const row = document.querySelector(`[${attr}="${id}"]`); if (!row) return;
+  row.classList.add('fresh'); row.scrollIntoView({ block:'nearest', behavior:'smooth' });
+  setTimeout(() => row.classList.remove('fresh'), 1200);
+}
+function addLap() {
+  const r = parseTime($('lapInput').value);
+  if (r.err) return fieldErr('lapMsg', 'lapInput', r.err);
+  fieldErr('lapMsg', 'lapInput', '');
+  const prev = bestOf(currentTrack), lap = { id: uid(), time: r.ms, date: Date.now() };
+  (db.laps[currentTrack] = db.laps[currentTrack] || []).push(lap); save();
+  $('lapInput').value = ''; renderRecords(true); highlight('data-lap-id', lap.id);
+  if (prev === null || lap.time < prev) {
+    toast(prev === null ? `First ${currentTrack} lap — ${formatTime(lap.time)} is your PB` : `NEW PB — ${secs(lap.time - prev)} vs ${formatTime(prev)}`, { pb:true });
+    const c = $('pbCard'); c.classList.remove('celebrate'); void c.offsetWidth; c.classList.add('celebrate'); setTimeout(() => c.classList.remove('celebrate'), 1200);
+  }
+}
+function delLap(id) { removeItem(db.laps[currentTrack], id, () => renderRecords(true)); }
 
-    function signedDelta(delta) {
-        const sign = delta > 0 ? '+' : '-';
-        return `${sign}${formatTime(Math.abs(delta))}`;
-    }
+// --- FINISHES ---
+function renderFinishes(still) {
+  const l = $('finishList'); l.className = 'list' + (still ? ' still' : '');
+  if (!db.finishes.length) { l.innerHTML = `<div class="empty">No races yet — log your first finish<br><button class="btn" onclick="$('posInput').focus()">Enter finish position</button></div>`; return; }
+  l.innerHTML = '';
+  [...db.finishes].sort((a, b) => b.date - a.date).forEach((f, i) => {
+    const d = document.createElement('div'); d.className = 'item'; d.dataset.finId = f.id; d.style.setProperty('--i', Math.min(i, 10));
+    d.innerHTML = `<div><strong style="font-size:18px">P${f.pos}</strong> <small class="dim" style="margin-left:8px">${new Date(f.date).toLocaleDateString()}</small></div><button class="delete-btn" aria-label="Delete result" onclick="delFinish('${f.id}')">✕</button>`;
+    l.appendChild(d);
+  });
+}
+function addFinish() {
+  const pos = parseInt($('posInput').value, 10);
+  if (!(pos >= 1)) return fieldErr('finMsg', 'posInput', 'Enter a finish position of 1 or higher');
+  fieldErr('finMsg', 'posInput', '');
+  const f = { id: uid(), pos, date: Date.now() }; db.finishes.push(f); save();
+  $('posInput').value = ''; renderFinishes(true); highlight('data-fin-id', f.id);
+}
+function delFinish(id) { removeItem(db.finishes, id, () => renderFinishes(true)); }
+$('lapInput').addEventListener('keydown', e => { if (e.key === 'Enter') addLap(); });
+$('posInput').addEventListener('keydown', e => { if (e.key === 'Enter') addFinish(); });
+$('lapInput').addEventListener('input', () => fieldErr('lapMsg', 'lapInput', ''));
+$('posInput').addEventListener('input', () => fieldErr('finMsg', 'posInput', ''));
 
-    // --- TRACKS & LAPS ---
-    function renderTrackList() {
-        const list = document.getElementById('trackList');
-        list.innerHTML = '';
-        LMU_TRACKS.forEach(t => {
-            const btn = document.createElement('button');
-            btn.className = 'btn';
-            btn.innerHTML = `${t} <span>›</span>`;
-            btn.onclick = () => navigateTo('records', t);
-            list.appendChild(btn);
-        });
-    }
+// --- PROGRESS ---
+function populateTrackSelect() {
+  const sel = $('progressTrack'), cur = sel.value;
+  sel.innerHTML = LMU_TRACKS.map(t => `<option value="${t}">${t}</option>`).join('');
+  if (cur) sel.value = cur; else if (currentTrack) sel.value = currentTrack;
+}
+function computeTrackProgress() {
+  const track = $('progressTrack').value, days = parseInt($('trackDays').value) || 30, now = Date.now();
+  const laps = (db.laps[track] || []).filter(l => l.date > now - days * 86400000).sort((a, b) => a.date - b.date);
+  const res = $('trackProgressResult');
+  if (laps.length < 2) { res.innerHTML = '<div class="stat" style="text-align:center;color:var(--red)">Need at least 2 laps in this period to calculate.</div>'; return; }
+  const prev = laps[laps.length - 2], last = laps[laps.length - 1], delta = last.time - prev.time, isGain = delta < 0;
+  const pct = ((Math.abs(delta) / prev.time) * 100).toFixed(2), best = Math.min(...laps.map(l => l.time)), dr = formatDateRange(days);
+  db.saved.unshift({ id: uid(), type:'track', track, dates:dr, imp:pct, gain:isGain, delta, prevTime:prev.time, lastTime:last.time, timestamp:Date.now() });
+  db.saved = db.saved.slice(0, MAX_SAVED); save();
+  res.innerHTML = `<div class="stat"><strong style="font-size:18px">${track}</strong><br><span class="dim">${dr}</span><hr>
+    Previous lap: <span class="mono">${formatTime(prev.time)}</span><br>Latest lap: <span class="mono">${formatTime(last.time)}</span><hr>
+    <span class="${isGain ? 'pb' : 'slow'} big pop">${isGain ? '−' : '+'}${pct}%</span> <span class="dim" style="font-size:14px">(${signedDelta(delta)})</span><br>
+    <span class="dim" style="font-size:14px">Session best: ${formatTime(best)}</span>
+    <div class="bar ${isGain ? 'gain' : ''}"><i data-w="${Math.min(100, Math.abs(parseFloat(pct)) * 12).toFixed(1)}"></i></div></div>
+    <div style="text-align:center;color:var(--green);font-size:12px;margin-top:5px">Saved to Progression History ✓</div>`;
+  animateBars();
+}
+function computeGlobalProgress() {
+  const days = parseInt($('globalDays').value) || 30, now = Date.now();
+  const fins = db.finishes.filter(f => f.date > now - days * 86400000), res = $('globalProgressResult');
+  if (!fins.length) { res.innerHTML = '<div class="stat" style="text-align:center">No races in this period.</div>'; return; }
+  const avg = (fins.reduce((a, b) => a + b.pos, 0) / fins.length).toFixed(1), dr = formatDateRange(days);
+  db.saved.unshift({ id: uid(), type:'global', dates:dr, avg, timestamp:Date.now() });
+  db.saved = db.saved.slice(0, MAX_SAVED); save();
+  res.innerHTML = `<div class="stat"><strong style="font-size:18px">Overall Performance</strong><br><span class="dim">${dr}</span><hr>
+    Avg Finish: <strong style="font-size:24px">P${avg}</strong><br>Races: ${fins.length}
+    <div class="bar gain"><i data-w="${Math.max(4, Math.min(100, (1 - (parseFloat(avg) - 1) / 20) * 100)).toFixed(1)}"></i></div></div>
+    <div style="text-align:center;color:var(--green);font-size:12px;margin-top:5px">Saved to Progression History ✓</div>`;
+  animateBars();
+}
 
-    function renderRecords() {
-        const list = document.getElementById('recordsList');
-        const laps = db.laps[currentTrack] || [];
-        document.getElementById('currentTrackTitle').innerText = currentTrack;
-        list.innerHTML = laps.length ? '' : '<p style="text-align:center; color:var(--muted); margin-top:20px;">No laps recorded yet.</p>';
+// --- HISTORY ---
+function renderSaved(still) {
+  const l = $('savedList'); l.className = 'list' + (still ? ' still' : '');
+  if (!db.saved.length) { l.innerHTML = `<div class="empty">No comparisons saved yet — run one from Progress<br><button class="btn" onclick="setTab('progress')">Open Progress</button></div>`; return; }
+  l.innerHTML = '';
+  db.saved.forEach((it, i) => {
+    const d = document.createElement('div'); d.className = 'item'; d.style.setProperty('--i', Math.min(i, 10));
+    const gain = it.gain !== undefined ? it.gain : true;
+    d.innerHTML = (it.type === 'track'
+      ? `<div><span class="saved-type" style="color:var(--red)">Track progress</span><span class="saved-main">${it.track}: <span class="${gain ? 'pb' : 'slow'}">${gain ? '−' : '+'}${it.imp}%</span></span><span class="saved-dates">${it.dates}</span></div>`
+      : `<div><span class="saved-type" style="color:var(--green)">Overall progress</span><span class="saved-main">Avg Finish: P${it.avg}</span><span class="saved-dates">${it.dates}</span></div>`)
+      + `<button class="delete-btn" aria-label="Delete saved entry" onclick="delSaved('${it.id}')">✕</button>`;
+    l.appendChild(d);
+  });
+}
+function delSaved(id) { removeItem(db.saved, id, () => renderSaved(true)); }
+async function clearSaved() {
+  if (await askConfirm('Clear saved history?', 'All saved comparisons will be removed. Laps and race results are not affected.', 'Clear history')) { db.saved = []; save(); renderSaved(); }
+}
+async function resetAllData() {
+  if (await askConfirm('Reset all data?', 'This permanently deletes every lap time, race finish and saved comparison. This can’t be undone.', 'Reset everything')) {
+    db = { laps:{}, finishes:[], saved:[] }; save(); renderSaved(); toast('All data has been reset');
+  }
+}
 
-        const bestTime = laps.length ? Math.min(...laps.map(l => l.time)) : null;
+function animateBars() {
+  requestAnimationFrame(() => document.querySelectorAll('.stat .bar > i').forEach(el => { el.style.width = (el.dataset.w || 0) + '%'; }));
+}
 
-        const sorted = laps
-            .map((l, i) => ({ ...l, _i: i }))
-            .sort((a, b) => a.time - b.time);
-
-        sorted.forEach(l => {
-            const div = document.createElement('div');
-            div.className = 'item';
-            div.innerHTML = `
-                <div>
-                    <span class="${l.time === bestTime ? 'pb' : ''}" style="font-size:18px; font-family:monospace;">${formatTime(l.time)}</span><br>
-                    <small style="color:var(--muted)">${new Date(l.date).toLocaleDateString()}</small>
-                </div>
-                <button class="delete-btn" onclick="deleteLap(${l._i})">✕</button>
-            `;
-            list.appendChild(div);
-        });
-    }
-
-    function addLap() {
-        const m = parseInt(document.getElementById('minutes').value) || 0;
-        const s = parseInt(document.getElementById('seconds').value) || 0;
-        const ms = parseInt(document.getElementById('milliseconds').value) || 0;
-        const total = (m * 60000) + (s * 1000) + ms;
-
-        if (total === 0) return;
-
-        if (!db.laps[currentTrack]) db.laps[currentTrack] = [];
-        db.laps[currentTrack].push({ time: total, date: Date.now() });
-        save();
-
-        document.getElementById('minutes').value = '';
-        document.getElementById('seconds').value = '';
-        document.getElementById('milliseconds').value = '';
-        renderRecords();
-
-        const plus = document.querySelector('.plus');
-        if (plus) {
-            plus.classList.remove('bump');
-            void plus.offsetWidth;
-            plus.classList.add('bump');
-        }
-        markFresh();
-    }
-
-    function markFresh() {
-        const first = document.querySelector('.list .item');
-        if (!first) return;
-        first.classList.add('fresh');
-        setTimeout(() => first.classList.remove('fresh'), 1200);
-    }
-
-    function deleteLap(idx) {
-        if (confirm('Delete this lap?')) {
-            db.laps[currentTrack].splice(idx, 1);
-            save();
-            renderRecords();
-        }
-    }
-
-    // --- FINISHES ---
-    function renderFinishes() {
-        const list = document.getElementById('finishList');
-        list.innerHTML = db.finishes.length ? '' : '<p style="text-align:center; color:var(--muted); margin-top:20px;">No races recorded.</p>';
-
-        const sorted = db.finishes
-            .map((f, i) => ({ ...f, _i: i }))
-            .sort((a, b) => b.date - a.date);
-
-        sorted.forEach(f => {
-            const div = document.createElement('div');
-            div.className = 'item';
-            div.innerHTML = `<div><strong style="font-size:18px;">P${f.pos}</strong> <small style="color:var(--muted); margin-left:8px;">${new Date(f.date).toLocaleDateString()}</small></div>
-                             <button class="delete-btn" onclick="deleteFinish(${f._i})">✕</button>`;
-            list.appendChild(div);
-        });
-    }
-
-    function addFinish() {
-        const pos = parseInt(document.getElementById('position').value);
-        if (!pos || pos < 1) return;
-        db.finishes.push({ pos, date: Date.now() });
-        save();
-        document.getElementById('position').value = '';
-        renderFinishes();
-    }
-
-    function deleteFinish(idx) {
-        if (confirm('Delete this result?')) {
-            db.finishes.splice(idx, 1);
-            save();
-            renderFinishes();
-        }
-    }
-
-    // --- PROGRESS LOGIC ---
-    function populateTrackSelect() {
-        const sel = document.getElementById('progressTrack');
-        sel.innerHTML = LMU_TRACKS.map(t => `<option value="${t}">${t}</option>`).join('');
-    }
-
-    function computeTrackProgress() {
-        const track = document.getElementById('progressTrack').value;
-        const days = parseInt(document.getElementById('trackDays').value) || 30;
-        const now = Date.now();
-        const laps = (db.laps[track] || [])
-            .filter(l => l.date > (now - days * 86400000))
-            .sort((a, b) => a.date - b.date);
-
-        const res = document.getElementById('trackProgressResult');
-
-        if (laps.length < 2) {
-            res.innerHTML = '<div class="stat" style="text-align:center; color:var(--red);">Need at least 2 laps in this period to calculate.</div>';
-            return;
-        }
-
-        const prev = laps[laps.length - 2];
-        const last = laps[laps.length - 1];
-        const delta = last.time - prev.time;
-        const isGain = delta < 0;
-        const pct = ((Math.abs(delta) / prev.time) * 100).toFixed(2);
-
-        const best = Math.min(...laps.map(l => l.time));
-        const dateRangeStr = formatDateRange(days);
-
-        db.saved.unshift({
-            type: 'track',
-            track: track,
-            dates: dateRangeStr,
-            imp: pct,
-            gain: isGain,
-            delta: delta,
-            prevTime: prev.time,
-            lastTime: last.time,
-            timestamp: Date.now()
-        });
-        db.saved = db.saved.slice(0, MAX_SAVED);
-        save();
-
-        res.innerHTML = `<div class="stat">
-            <strong style="font-size:18px;">${track}</strong><br>
-            <span style="color:var(--muted)">${dateRangeStr}</span>
-            <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
-            Previous lap: <span style="font-family:monospace;">${formatTime(prev.time)}</span><br>
-            Latest lap: <span style="font-family:monospace;">${formatTime(last.time)}</span><br>
-            <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
-            <span class="${isGain ? 'pb' : 'slow'} big pop">${isGain ? '−' : '+'}${pct}%</span>
-            <span style="color:var(--muted); font-size:14px;">(${signedDelta(delta)})</span><br>
-            <span style="color:var(--muted); font-size:14px;">Session best: ${formatTime(best)}</span>
-            <div class="bar ${isGain ? 'gain' : ''}"><i data-w="${Math.min(100, Math.abs(parseFloat(pct)) * 12).toFixed(1)}"></i></div>
-        </div>
-        <div style="text-align:center; color:var(--green); font-size:12px; margin-top:5px;">Saved to Progression History ✓</div>`;
-    }
-
-    function computeGlobalProgress() {
-        const days = parseInt(document.getElementById('globalDays').value) || 30;
-        const now = Date.now();
-        const fins = db.finishes.filter(f => f.date > (now - days * 86400000));
-        const res = document.getElementById('globalProgressResult');
-
-        if (!fins.length) {
-            res.innerHTML = '<div class="stat" style="text-align:center;">No races in this period.</div>';
-            return;
-        }
-
-        const avg = (fins.reduce((a, b) => a + b.pos, 0) / fins.length).toFixed(1);
-        const dateRangeStr = formatDateRange(days);
-
-        db.saved.unshift({
-            type: 'global',
-            dates: dateRangeStr,
-            avg: avg,
-            timestamp: Date.now()
-        });
-        db.saved = db.saved.slice(0, MAX_SAVED);
-        save();
-
-        res.innerHTML = `<div class="stat">
-             <strong style="font-size:18px;">Overall Performance</strong><br>
-             <span style="color:var(--muted)">${dateRangeStr}</span>
-             <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
-             Avg Finish: <strong style="color:var(--text); font-size:24px;">P${avg}</strong><br>
-             Races: ${fins.length}
-             <div class="bar gain"><i data-w="${Math.max(4, Math.min(100, (1 - (parseFloat(avg) - 1) / 20) * 100)).toFixed(1)}"></i></div>
-        </div>
-        <div style="text-align:center; color:var(--green); font-size:12px; margin-top:5px;">Saved to Progression History ✓</div>`;
-    }
-
-    // --- SAVED PROGRESSION VIEW ---
-    function renderSavedProgression() {
-        const list = document.getElementById('savedList');
-        list.innerHTML = db.saved.length ? '' : '<p style="text-align:center; color:var(--muted); margin-top:20px;">No comparisons saved yet.<br>Go to Progress menus and compute stats!</p>';
-
-        db.saved.forEach((item, idx) => {
-            const div = document.createElement('div');
-            div.className = 'item';
-
-            let content = '';
-
-            if (item.type === 'track') {
-                const gain = item.gain !== undefined ? item.gain : true;
-                content = `
-                    <div>
-                        <span class="saved-type" style="color:var(--red);">TRACK PROGRESS</span>
-                        <span class="saved-main">${item.track}: <span class="${gain ? 'pb' : 'slow'}">${gain ? '−' : '+'}${item.imp}%</span></span>
-                        <span class="saved-dates">${item.dates}</span>
-                    </div>
-                `;
-            } else {
-                content = `
-                    <div>
-                        <span class="saved-type" style="color:var(--green);">OVERALL PROGRESS</span>
-                        <span class="saved-main">Avg Finish: P${item.avg}</span>
-                        <span class="saved-dates">${item.dates}</span>
-                    </div>
-                `;
-            }
-
-            div.innerHTML = content + `<button class="delete-btn" onclick="deleteSaved(${idx})">✕</button>`;
-            list.appendChild(div);
-        });
-    }
-
-    function deleteSaved(idx) {
-        if (confirm('Delete this saved progression?')) {
-            db.saved.splice(idx, 1);
-            save();
-            renderSavedProgression();
-        }
-    }
-
-    function clearSaved() {
-        if (confirm('Clear all saved history?')) {
-            db.saved = [];
-            save();
-            renderSavedProgression();
-        }
-    }
-
-    function resetAllData() {
-        if (confirm('This will delete ALL your lap times, race finishes, and saved progressions. Are you sure?')) {
-            db = { laps: {}, finishes: [], saved: [] };
-            save();
-            alert('All data has been reset.');
-            renderView('menu');
-        }
-    }
-
-    function animateBars() {
-        requestAnimationFrame(() => {
-            document.querySelectorAll('.stat .bar > i').forEach(el => {
-                el.style.width = (el.dataset.w || 0) + '%';
-            });
-        });
-    }
-
-    const _renderView = renderView;
-    renderView = function (viewId) {
-        _renderView(viewId);
-        animateBars();
-    };
-
-    renderView('menu');
+renderView('tracks');
 </script>
 </body>
 </html>
