@@ -1,10 +1,11 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Sim Progress Tracker – LMU Pro</title>
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#090a10" />
   <style>
     :root {
       --bg: #000000;
@@ -298,6 +299,358 @@
     .saved-type { font-size: 12px; color: var(--red); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display:block; }
     .saved-dates { font-size: 13px; color: var(--muted); margin-top: 4px; display:block; }
     .saved-main { font-size: 18px; font-weight: bold; }
+
+
+    /* ── LIQUID GLASS REDESIGN ─────────────────────────────────────── */
+    :root {
+      color-scheme: dark;
+      --bg: #080a10;
+      --card: rgba(255,255,255,.055);
+      --border: rgba(255,255,255,.13);
+      --red: #ff3b48;
+      --red-glow: rgba(255,59,72,.25);
+      --green: #67f5a7;
+      --text: #f6f7fb;
+      --muted: #9ba3b3;
+      --glass: rgba(255,255,255,.065);
+      --glass-deep: rgba(18,21,30,.72);
+    }
+
+    html { min-height: 100%; background: var(--bg); scroll-behavior: smooth; }
+    body {
+      position: relative;
+      isolation: isolate;
+      min-height: 100vh;
+      min-height: 100dvh;
+      background: #080a10;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 12% 4%, rgba(255,48,64,.18), transparent 34%),
+        radial-gradient(ellipse at 93% 28%, rgba(78,101,190,.16), transparent 33%),
+        radial-gradient(ellipse at 55% 100%, rgba(255,255,255,.055), transparent 42%),
+        linear-gradient(145deg, #080a10 0%, #10121b 50%, #07080d 100%);
+    }
+    body > header { z-index: 50; }
+    body > .container { position: relative; z-index: 1; }
+
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 15px 20px 13px;
+      background: rgba(13,15,23,.66);
+      border-bottom: 1px solid rgba(255,255,255,.11);
+      box-shadow: 0 10px 36px rgba(0,0,0,.12), inset 0 1px rgba(255,255,255,.1);
+      -webkit-backdrop-filter: blur(28px) saturate(165%);
+      backdrop-filter: blur(28px) saturate(165%);
+      font-size: 14px;
+      letter-spacing: 2.3px;
+    }
+    header::after {
+      content: "SIM RACING  •  DRIVER DEVELOPMENT";
+      color: rgba(220,225,238,.55);
+      font-size: 8px;
+      line-height: 1.4;
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+
+    .container { max-width: 660px; padding: 22px 17px calc(120px + env(safe-area-inset-bottom)); }
+    .view { animation: viewIn .32s cubic-bezier(.2,.7,.2,1) both; }
+
+    .dashboard-intro { padding: 18px 5px 25px; }
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #ff7d86;
+      font-size: 9px;
+      line-height: 1.4;
+      font-weight: 800;
+      letter-spacing: 2.1px;
+    }
+    .status-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      flex: 0 0 6px;
+      border-radius: 50%;
+      background: var(--red);
+      box-shadow: 0 0 12px rgba(255,59,72,.8);
+    }
+    .dashboard-intro h1 {
+      margin: 17px 0 10px;
+      font-size: clamp(30px, 8vw, 43px);
+      line-height: 1.06;
+      letter-spacing: -1.7px;
+      font-weight: 800;
+    }
+    .dashboard-intro h1 span {
+      color: transparent;
+      background: linear-gradient(100deg, #fff 3%, #ffc4c8 48%, #ff4958 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+    .dashboard-intro p { max-width: 330px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.65; }
+
+    .menu { max-width: none; gap: 11px; text-align: left; }
+    .menu .btn {
+      min-height: 78px;
+      padding: 14px 14px;
+      gap: 13px;
+      justify-content: flex-start;
+      text-align: left;
+      border-radius: 19px;
+      background: linear-gradient(130deg, rgba(255,255,255,.095), rgba(255,255,255,.025) 70%);
+      border: 1px solid rgba(255,255,255,.13);
+      box-shadow: inset 0 1px rgba(255,255,255,.12), 0 9px 24px rgba(0,0,0,.12);
+      -webkit-backdrop-filter: blur(22px) saturate(155%);
+      backdrop-filter: blur(22px) saturate(155%);
+      animation: cardIn .42s cubic-bezier(.2,.7,.2,1) both;
+    }
+    .menu .btn:first-child {
+      border-color: rgba(255,85,98,.4);
+      background: linear-gradient(120deg, rgba(255,57,72,.16), rgba(255,255,255,.045) 72%);
+      box-shadow: inset 0 1px rgba(255,255,255,.16), 0 10px 30px rgba(255,35,52,.06);
+      animation: cardIn .42s cubic-bezier(.2,.7,.2,1) both, pulseGlow 3.8s ease-in-out infinite .6s;
+    }
+    .menu .btn span { display: block; }
+    .menu-icon {
+      display: grid !important;
+      place-items: center;
+      width: 43px;
+      height: 43px;
+      flex: 0 0 43px;
+      color: #ff7b85;
+      font-size: 22px;
+      line-height: 1;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 14px;
+      background: linear-gradient(145deg, rgba(255,255,255,.13), rgba(255,255,255,.035));
+      box-shadow: inset 0 1px rgba(255,255,255,.13), 0 4px 12px rgba(0,0,0,.14);
+    }
+    .menu-copy { min-width: 0; display: flex !important; flex-direction: column; gap: 5px; flex: 1; }
+    .menu-copy strong { font-size: 12px; font-weight: 800; letter-spacing: 1.15px; line-height: 1.2; }
+    .menu-copy small { color: var(--muted); font-size: 11px; font-weight: 400; letter-spacing: 0; line-height: 1.35; }
+    .btn-arrow {
+      display: grid !important;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      flex: 0 0 28px;
+      margin-left: auto;
+      color: rgba(241,244,251,.65);
+      font-size: 16px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(255,255,255,.04);
+      border-radius: 50%;
+      transition: transform .2s ease, color .2s ease;
+    }
+    .menu .btn:hover .btn-arrow { transform: translate(2px,-2px); color: white; }
+    .menu .btn:active { transform: scale(.985); }
+    .menu .btn::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent); }
+    .menu .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      height: auto;
+      margin: 12px 2px 4px;
+      background: none;
+      color: rgba(190,197,212,.55);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-align: left;
+    }
+    .menu .divider::after { content: ""; height: 1px; flex: 1; background: linear-gradient(90deg, rgba(255,255,255,.15), transparent); }
+    .menu .secondary-action { min-height: 70px; }
+    .menu .secondary-action .menu-icon { color: #c0c9ff; }
+    .menu .danger-action { min-height: 66px; margin-top: 5px; border-color: rgba(255,81,94,.16); background: rgba(255,59,72,.035); }
+    .menu .danger-action .menu-icon { color: #ff6672; border-color: rgba(255,81,94,.18); background: rgba(255,59,72,.07); }
+    .menu .danger-action .menu-copy strong { color: #ff929a; }
+    .menu .danger-action .menu-copy small { color: rgba(255,160,166,.6); }
+
+    .btn, .item, .stat {
+      color: var(--text);
+      border-color: rgba(255,255,255,.13);
+      background: linear-gradient(135deg, rgba(255,255,255,.075), rgba(255,255,255,.028));
+      box-shadow: inset 0 1px rgba(255,255,255,.09), 0 8px 24px rgba(0,0,0,.1);
+      -webkit-backdrop-filter: blur(22px) saturate(155%);
+      backdrop-filter: blur(22px) saturate(155%);
+    }
+    .btn {
+      border-radius: 16px;
+      border-width: 1px;
+      padding: 17px;
+      min-height: 58px;
+      transition: transform .16s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+    }
+    .btn:hover { border-color: rgba(255,255,255,.23); }
+    .btn:active { background: rgba(255,255,255,.095); transform: scale(.99); }
+    .list { gap: 11px; }
+    .list > .btn { text-align: left; }
+    .item {
+      position: relative;
+      overflow: hidden;
+      gap: 14px;
+      padding: 17px;
+      border-radius: 17px;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .item::before, .stat::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 12%;
+      right: 12%;
+      height: 1px;
+      pointer-events: none;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+    }
+    .item:active { border-color: rgba(255,255,255,.26); }
+    .item.fresh { animation: cardIn .35s ease-out both, flashGreen 1.1s ease-out; }
+    .delete-btn {
+      flex: 0 0 auto;
+      min-width: 38px;
+      min-height: 38px;
+      padding: 8px 11px;
+      border: 1px solid rgba(255,91,103,.22);
+      border-radius: 12px;
+      color: #ff8790;
+      background: linear-gradient(145deg, rgba(255,59,72,.16), rgba(255,255,255,.035));
+      box-shadow: inset 0 1px rgba(255,255,255,.09);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+    }
+    .plus {
+      position: fixed;
+      bottom: calc(20px + env(safe-area-inset-bottom));
+      right: max(18px, calc((100vw - 660px) / 2 + 18px));
+      width: 60px;
+      height: 60px;
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 21px;
+      background: linear-gradient(145deg, rgba(255,86,97,.98), rgba(198,15,33,.92));
+      box-shadow: inset 0 1px rgba(255,255,255,.35), 0 9px 30px rgba(255,36,54,.3), 0 4px 12px rgba(0,0,0,.28);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      backdrop-filter: blur(20px) saturate(160%);
+      font-size: 31px;
+    }
+    .plus:active { transform: scale(.92); }
+    .back {
+      position: relative;
+      padding: 9px 13px;
+      margin: 0 0 22px;
+      color: #d3d7e1;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 100px;
+      background: rgba(255,255,255,.05);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      font-size: 11px;
+      letter-spacing: 1px;
+      transition: background .2s ease, color .2s ease;
+    }
+    .back:hover { color: white; background: rgba(255,255,255,.09); }
+
+    input:not([type="checkbox"]), select, textarea {
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.15) !important;
+      border-radius: 13px !important;
+      background: rgba(255,255,255,.055) !important;
+      box-shadow: inset 0 1px rgba(255,255,255,.055);
+      -webkit-backdrop-filter: blur(18px) saturate(150%);
+      backdrop-filter: blur(18px) saturate(150%);
+      outline: none;
+      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    }
+    input:not([type="checkbox"]):focus, select:focus, textarea:focus {
+      border-color: rgba(255,91,104,.72) !important;
+      box-shadow: 0 0 0 3px rgba(255,59,72,.1), inset 0 1px rgba(255,255,255,.07);
+    }
+    input::placeholder { color: rgba(190,197,212,.52); }
+    select option { background: #171923; color: #f6f7fb; }
+    .picker {
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 25px;
+      padding: 14px 10px;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 19px;
+      background: rgba(255,255,255,.045);
+      box-shadow: inset 0 1px rgba(255,255,255,.07);
+      -webkit-backdrop-filter: blur(22px) saturate(145%);
+      backdrop-filter: blur(22px) saturate(145%);
+    }
+    .picker input, .picker select { padding: 12px 8px; font-size: 17px; }
+    .compute-btn {
+      min-height: 56px;
+      padding: 16px 18px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 16px;
+      background: linear-gradient(120deg, #ff4654, #d8192c 72%, #b80d22);
+      box-shadow: inset 0 1px rgba(255,255,255,.28), 0 8px 24px rgba(226,25,45,.2);
+      letter-spacing: 1px;
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+    }
+    .compute-btn:active { opacity: .9; transform: scale(.99); }
+    .stat {
+      position: relative;
+      overflow: hidden;
+      padding: 21px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 20px;
+      line-height: 1.75;
+    }
+    .stat hr { border-top-color: rgba(255,255,255,.12) !important; }
+    .stat .bar { height: 7px; background: rgba(255,255,255,.08); border-radius: 99px; }
+    .stat .bar > i { border-radius: 99px; box-shadow: 0 0 14px rgba(255,59,72,.23); }
+    .stat .bar.gain > i { box-shadow: 0 0 14px rgba(103,245,167,.2); }
+    .stat .big { letter-spacing: -.8px; }
+    .pb { color: var(--green); }
+    .slow { color: #ff818b; }
+    .saved-type { letter-spacing: 1.5px; font-size: 9px; font-weight: 800; }
+    .saved-main { font-size: 16px; line-height: 1.5; }
+    .saved-dates { line-height: 1.5; }
+    .clear-history {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .clear-history span { font-size: 18px; }
+
+    :focus-visible { outline: 2px solid rgba(255,105,116,.9); outline-offset: 3px; }
+    button { touch-action: manipulation; }
+    @media (min-width: 600px) {
+      .container { padding-top: 30px; }
+      .dashboard-intro { padding-top: 24px; padding-bottom: 30px; }
+      .menu { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .menu .btn { min-height: 106px; align-items: flex-start; flex-wrap: wrap; }
+      .menu .menu-icon { width: 38px; height: 38px; flex-basis: 38px; }
+      .menu .menu-copy { flex-basis: calc(100% - 58px); }
+      .menu .btn-arrow { position: absolute; right: 13px; top: 13px; width: 24px; height: 24px; }
+      .menu .divider { grid-column: 1 / -1; }
+      .menu .danger-action { margin-top: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -305,14 +658,45 @@
 <header id="headerTitle">LMU TRACKER</header>
 
 <div class="container">
-    <div id="menu" class="view">
-        <button class="btn" onclick="navigateTo('tracks')">LAP RECORDS</button>
-        <button class="btn" onclick="navigateTo('consistency')">CONSISTENCY</button>
-        <button class="btn" onclick="navigateTo('trackProgress')">TRACK PROGRESS</button>
-        <button class="btn" onclick="navigateTo('globalProgress')">OVERALL PROGRESS</button>
-        <div class="divider"></div>
-        <button class="btn" onclick="navigateTo('savedProgression')" style="border-color:#444;">SAVED PROGRESSION</button>
-        <button class="btn" onclick="resetAllData()" style="color:#ff5555; border-color:rgba(255,85,85,0.3); margin-top:20px;">RESET ALL DATA</button>
+    <div id="menu" class="view hidden">
+        <section class="dashboard-intro" aria-label="Dashboard introduction">
+            <div class="eyebrow"><span class="status-dot"></span> DRIVER DEVELOPMENT / LMU</div>
+            <h1>Find your next<br><span> tenth of a second.</span></h1>
+            <p>Your pace, consistency and race progress — all in one cockpit.</p>
+        </section>
+        <div class="menu">
+            <button class="btn" onclick="navigateTo('tracks')">
+                <span class="menu-icon" aria-hidden="true">◷</span>
+                <span class="menu-copy"><strong>LAP RECORDS</strong><small>Save and compare your fastest laps</small></span>
+                <span class="btn-arrow" aria-hidden="true">↗</span>
+            </button>
+            <button class="btn" onclick="navigateTo('consistency')">
+                <span class="menu-icon" aria-hidden="true">◎</span>
+                <span class="menu-copy"><strong>CONSISTENCY</strong><small>Review your race finishes</small></span>
+                <span class="btn-arrow" aria-hidden="true">↗</span>
+            </button>
+            <button class="btn" onclick="navigateTo('trackProgress')">
+                <span class="menu-icon" aria-hidden="true">↗</span>
+                <span class="menu-copy"><strong>TRACK PROGRESS</strong><small>Measure pace changes by circuit</small></span>
+                <span class="btn-arrow" aria-hidden="true">↗</span>
+            </button>
+            <button class="btn" onclick="navigateTo('globalProgress')">
+                <span class="menu-icon" aria-hidden="true">⌁</span>
+                <span class="menu-copy"><strong>OVERALL PROGRESS</strong><small>See your bigger racing picture</small></span>
+                <span class="btn-arrow" aria-hidden="true">↗</span>
+            </button>
+            <div class="divider"><span>YOUR DATA</span></div>
+            <button class="btn secondary-action" onclick="navigateTo('savedProgression')">
+                <span class="menu-icon" aria-hidden="true">▤</span>
+                <span class="menu-copy"><strong>SAVED PROGRESSION</strong><small>Revisit previous comparisons</small></span>
+                <span class="btn-arrow" aria-hidden="true">↗</span>
+            </button>
+            <button class="btn danger-action" onclick="resetAllData()">
+                <span class="menu-icon" aria-hidden="true">↺</span>
+                <span class="menu-copy"><strong>RESET ALL DATA</strong><small>Clear saved laps and race history</small></span>
+                <span class="btn-arrow" aria-hidden="true">↗</span>
+            </button>
+        </div>
     </div>
 
     <div id="tracks" class="view hidden">
@@ -377,7 +761,7 @@
         <a class="back" onclick="goBack()">← Back</a>
         <div style="margin-bottom:15px; color:#aaa; font-size:14px;">History of all comparisons calculated:</div>
         <div id="savedList" class="list"></div>
-        <button onclick="clearSaved()" style="width:100%; padding:15px; background:none; border:1px solid #333; color:#666; margin-top:20px; border-radius:8px;">Clear History</button>
+        <button class="btn clear-history" onclick="clearSaved()">Clear saved history <span aria-hidden="true">↺</span></button>
     </div>
 </div>
 
@@ -412,7 +796,6 @@
         document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
         const activeView = document.getElementById(viewId);
         activeView.classList.remove('hidden');
-        // replay the entrance animation on every navigation
         activeView.style.animation = 'none';
         void activeView.offsetWidth;
         activeView.style.animation = '';
@@ -474,7 +857,6 @@
 
         const bestTime = laps.length ? Math.min(...laps.map(l => l.time)) : null;
 
-        // keep the original index so delete hits the right lap
         const sorted = laps
             .map((l, i) => ({ ...l, _i: i }))
             .sort((a, b) => a.time - b.time);
@@ -519,7 +901,6 @@
         markFresh();
     }
 
-    // highlight the row that was just added
     function markFresh() {
         const first = document.querySelector('.list .item');
         if (!first) return;
@@ -591,7 +972,6 @@
             return;
         }
 
-        // last lap vs the one right before it
         const prev = laps[laps.length - 2];
         const last = laps[laps.length - 1];
         const delta = last.time - prev.time;
@@ -724,7 +1104,6 @@
         }
     }
 
-    // animate the progress bars after the result card renders
     function animateBars() {
         requestAnimationFrame(() => {
             document.querySelectorAll('.stat .bar > i').forEach(el => {
@@ -739,7 +1118,6 @@
         animateBars();
     };
 
-    // Initialize the app
     renderView('menu');
 </script>
 </body>
