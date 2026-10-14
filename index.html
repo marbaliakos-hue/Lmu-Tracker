@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Sim Progress Tracker – LMU Pro</title>
+  <meta name="theme-color" content="#000000" />
+  <style>
+    :root {
+      --bg: #000000;
+      --card: #111111;
+      --border: #333333;
+      --red: #cc0000;
+      --red-glow: rgba(204, 0, 0, 0.2);
+      --green: #00cc33;
+      --text: #ffffff;
+      --muted: #888888;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    header {
+      padding: 16px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+      text-transform: uppercase;
+      background: #050505;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .container {
+        padding: 16px;
+        padding-bottom: 140px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .view { transition: opacity 0.2s ease-out; opacity: 1; }
+    .hidden { display: none !important; opacity: 0; }
+
+    .menu { display: grid; gap: 12px; }
+
+    .btn {
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      text-align: left;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn:active { background: #222; }
+
+    .list { display: flex; flex-direction: column; gap: 10px; }
+
+    .item {
+      padding: 16px;
+      background: var(--card);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .delete-btn {
+      background: #330000;
+      color: #ff5555;
+      border: 1px solid #550000;
+      padding: 8px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .plus {
+      position: fixed;
+      bottom: 15px;
+      right: 15px;
+      background: var(--red);
+      color: white;
+      border: none;
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      font-size: 30px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    .plus:active { transform: scale(0.9); }
+
+    .back {
+      color: var(--muted);
+      margin-bottom: 20px;
+      display: inline-block;
+      font-size: 14px;
+      font-weight: bold;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 10px 0;
+    }
+    .back:active { color: white; }
+
+    .picker { display:flex; gap:8px; margin-top:25px; justify-content: center; align-items: center; }
+    .picker input, .picker select {
+      background: #000;
+      color: white;
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 18px;
+      text-align: center;
+    }
+    .picker input:focus { border-color: var(--red); outline: none; }
+
+    .pb { color: var(--green); font-weight: bold; }
+
+    .stat {
+      padding: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 15px;
+      line-height: 1.6;
+    }
+
+    .compute-btn {
+      background: var(--red);
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 8px;
+      width: 100%;
+      font-weight: bold;
+      font-size: 16px;
+      margin-top: 10px;
+      text-transform: uppercase;
+    }
+    .compute-btn:active { opacity: 0.8; }
+
+    .saved-type { font-size: 12px; color: var(--red); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display:block; }
+    .saved-dates { font-size: 13px; color: var(--muted); margin-top: 4px; display:block; }
+    .saved-main { font-size: 18px; font-weight: bold; }
+  </style>
+</head>
+<body>
+
+<header id="headerTitle">LMU TRACKER</header>
+
+<div class="container">
+    <div id="menu" class="view">
+        <button class="btn" onclick="navigateTo('tracks')">LAP RECORDS <span>›</span></button>
+        <button class="btn" onclick="navigateTo('consistency')">CONSISTENCY <span>›</span></button>
+        <button class="btn" onclick="navigateTo('trackProgress')">TRACK PROGRESS <span>›</span></button>
+        <button class="btn" onclick="navigateTo('globalProgress')">OVERALL PROGRESS <span>›</span></button>
+        <div style="height:1px; background:#222; margin:10px 0;"></div>
+        <button class="btn" onclick="navigateTo('savedProgression')" style="border-color:#444;">SAVED PROGRESSION <span>›</span></button>
+        <button class="btn" onclick="resetAllData()" style="color:#ff5555; border-color:rgba(255,85,85,0.3); margin-top:20px;">RESET ALL DATA</button>
+    </div>
+
+    <div id="tracks" class="view hidden">
+        <a class="back" onclick="goBack()">← Back</a>
+        <div id="trackList" class="list"></div>
+    </div>
+
+    <div id="records" class="view hidden">
+        <a class="back" onclick="goBack()">← Back</a>
+        <h2 id="currentTrackTitle" style="margin:0 0 15px 0; font-size: 22px; color:#fff;"></h2>
+        <div id="recordsList" class="list"></div>
+
+        <div class="picker">
+            <input type="number" id="minutes" placeholder="m" style="width:60px" inputmode="numeric">
+            <span style="font-size:20px;">:</span>
+            <input type="number" id="seconds" placeholder="s" style="width:60px" inputmode="numeric">
+            <span style="font-size:20px;">.</span>
+            <input type="number" id="milliseconds" placeholder="ms" style="width:70px" inputmode="numeric">
+        </div>
+        <button class="plus" onclick="addLap()">+</button>
+    </div>
+
+    <div id="consistency" class="view hidden">
+        <a class="back" onclick="goBack()">← Back</a>
+        <button class="btn" onclick="navigateTo('raceFinish')">RACE FINISHES <span>›</span></button>
+    </div>
+
+    <div id="raceFinish" class="view hidden">
+        <a class="back" onclick="goBack()">← Back</a>
+        <div id="finishList" class="list"></div>
+        <div class="picker">
+            <input type="number" id="position" placeholder="Finish Position (P)" style="width:100%" inputmode="numeric">
+        </div>
+        <button class="plus" onclick="addFinish()">+</button>
+    </div>
+
+    <div id="trackProgress" class="view hidden">
+        <a class="back" onclick="goBack()">← Back</a>
+        <div style="margin-bottom:20px;">
+            <label style="color:#aaa; font-size:14px; margin-bottom:5px; display:block;">Select Track:</label>
+            <select id="progressTrack" style="width:100%;"></select>
+        </div>
+        <div style="margin-bottom:20px;">
+             <label style="color:#aaa; font-size:14px; margin-bottom:5px; display:block;">Time Period (Days):</label>
+            <input type="number" id="trackDays" value="30" style="width:100%;" inputmode="numeric">
+        </div>
+        <button class="compute-btn" onclick="computeTrackProgress()">SEE PROGRESS</button>
+        <div id="trackProgressResult" style="margin-top:20px;"></div>
+    </div>
+
+    <div id="globalProgress" class="view hidden">
+        <a class="back" onclick="goBack()">← Back</a>
+        <div style="margin-bottom:20px;">
+            <label style="color:#aaa; font-size:14px; margin-bottom:5px; display:block;">Time Period (Days):</label>
+            <input type="number" id="globalDays" value="30" style="width:100%;" inputmode="numeric">
+        </div>
+        <button class="compute-btn" onclick="computeGlobalProgress()">SEE PROGRESS</button>
+        <div id="globalProgressResult" style="margin-top:20px;"></div>
+    </div>
+
+    <div id="savedProgression" class="view hidden">
+        <a class="back" onclick="goBack()">← Back</a>
+        <div style="margin-bottom:15px; color:#aaa; font-size:14px;">History of all comparisons calculated:</div>
+        <div id="savedList" class="list"></div>
+        <button onclick="clearSaved()" style="width:100%; padding:15px; background:none; border:1px solid #333; color:#666; margin-top:20px; border-radius:8px;">Clear History</button>
+    </div>
+</div>
+
+<script>
+    const LMU_TRACKS = ["Bahrain", "Fuji", "Interlagos", "Le Mans", "Monza", "Portimão", "Qatar", "Sebring", "Silverstone", "Spa-Francorchamps"];
+    let currentTrack = null;
+    let navigationStack = ['menu'];
+
+    let db = JSON.parse(localStorage.getItem('simTrackerLMU')) || { laps: {}, finishes: [], saved: [] };
+    if (!db.saved) { db.saved = []; }
+
+    function save() { localStorage.setItem('simTrackerLMU', JSON.stringify(db)); }
+
+    // --- NAVIGATION LOGIC ---
+    function navigateTo(viewId, trackName = null) {
+        if (trackName) currentTrack = trackName;
+        navigationStack.push(viewId);
+        renderView(viewId);
+    }
+
+    function goBack() {
+        if (navigationStack.length > 1) {
+            navigationStack.pop();
+            const prevView = navigationStack[navigationStack.length - 1];
+            renderView(prevView);
+        }
+    }
+
+    function renderView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+        const activeView = document.getElementById(viewId);
+        activeView.classList.remove('hidden');
+
+        if (viewId === 'tracks') renderTrackList();
+        if (viewId === 'records') renderRecords();
+        if (viewId === 'raceFinish') renderFinishes();
+        if (viewId === 'trackProgress') populateTrackSelect();
+        if (viewId === 'savedProgression') renderSavedProgression();
+
+        const titles = {
+            'menu': 'LMU TRACKER', 'tracks': 'SELECT TRACK', 'consistency': 'CONSISTENCY',
+            'trackProgress': 'TRACK PROGRESS', 'globalProgress': 'OVERALL', 'savedProgression': 'SAVED HISTORY',
+            'raceFinish': 'RACE FINISHES', 'records': 'LAP RECORDS'
+        };
+        document.getElementById('headerTitle').innerText = titles[viewId] || currentTrack || 'LMU TRACKER';
+        window.scrollTo(0,0);
+    }
+
+    // --- HELPERS ---
+    function formatTime(ms) {
+        if (!ms) return "--:--.---";
+        const m = Math.floor(ms / 60000);
+        const s = Math.floor((ms % 60000) / 1000);
+        const mm = ms % 1000;
+        return `${m}:${s.toString().padStart(2, '0')}.${mm.toString().padStart(3, '0')}`;
+    }
+
+    function formatDateRange(days) {
+        const end = new Date();
+        const start = new Date();
+        start.setDate(end.getDate() - days);
+        return `${start.toLocaleDateString()} to ${end.toLocaleDateString()}`;
+    }
+
+    // --- TRACKS & LAPS ---
+    function renderTrackList() {
+        const list = document.getElementById('trackList');
+        list.innerHTML = '';
+        LMU_TRACKS.forEach(t => {
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.innerHTML = `${t} <span>›</span>`;
+            btn.onclick = () => navigateTo('records', t);
+            list.appendChild(btn);
+        });
+    }
+
+    function renderRecords() {
+        const list = document.getElementById('recordsList');
+        const laps = db.laps[currentTrack] || [];
+        document.getElementById('currentTrackTitle').innerText = currentTrack;
+        list.innerHTML = laps.length ? '' : '<p style="text-align:center; color:var(--muted); margin-top:20px;">No laps recorded yet.</p>';
+
+        const bestTime = laps.length ? Math.min(...laps.map(l => l.time)) : null;
+
+        laps.sort((a,b) => a.time - b.time).forEach((l, idx) => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerHTML = `
+                <div>
+                    <span class="${l.time === bestTime ? 'pb' : ''}" style="font-size:18px; font-family:monospace;">${formatTime(l.time)}</span><br>
+                    <small style="color:var(--muted)">${new Date(l.date).toLocaleDateString()}</small>
+                </div>
+                <button class="delete-btn" onclick="deleteLap(${idx})">✕</button>
+            `;
+            list.appendChild(div);
+        })
+    }
+
+    function addLap() {
+        const m = parseInt(document.getElementById('minutes').value) || 0;
+        const s = parseInt(document.getElementById('seconds').value) || 0;
+        const ms = parseInt(document.getElementById('milliseconds').value) || 0;
+        const total = (m * 60000) + (s * 1000) + ms;
+
+        if (total === 0) return;
+
+        if (!db.laps[currentTrack]) db.laps[currentTrack] = [];
+        db.laps[currentTrack].push({ time: total, date: Date.now() });
+        save();
+
+        document.getElementById('minutes').value = '';
+        document.getElementById('seconds').value = '';
+        document.getElementById('milliseconds').value = '';
+        renderRecords();
+    }
+
+    function deleteLap(idx) {
+        if(confirm('Delete this lap?')) {
+            db.laps[currentTrack].splice(idx, 1);
+            save();
+            renderRecords();
+        }
+    }
+
+    // --- FINISHES ---
+    function renderFinishes() {
+        const list = document.getElementById('finishList');
+        list.innerHTML = db.finishes.length ? '' : '<p style="text-align:center; color:var(--muted); margin-top:20px;">No races recorded.</p>';
+        db.finishes.sort((a,b) => b.date - a.date).forEach((f, idx) => {
+            const div = document.createElement('div');
+            div.className = 'item';
+            div.innerHTML = `<div><strong style="font-size:18px;">P${f.pos}</strong> <small style="color:var(--muted); margin-left:8px;">${new Date(f.date).toLocaleDateString()}</small></div>
+                             <button class="delete-btn" onclick="deleteFinish(${idx})">✕</button>`;
+            list.appendChild(div);
+        });
+    }
+
+    function addFinish() {
+        const pos = parseInt(document.getElementById('position').value);
+        if (!pos || pos < 1) return;
+        db.finishes.push({ pos, date: Date.now() });
+        save();
+        document.getElementById('position').value = '';
+        renderFinishes();
+    }
+
+    function deleteFinish(idx) {
+        if(confirm('Delete this result?')) {
+            db.finishes.splice(idx, 1);
+            save();
+            renderFinishes();
+        }
+    }
+
+    // --- PROGRESS LOGIC ---
+    function populateTrackSelect() {
+        const sel = document.getElementById('progressTrack');
+        sel.innerHTML = LMU_TRACKS.map(t => `<option value="${t}">${t}</option>`).join('');
+    }
+
+    function computeTrackProgress() {
+        const track = document.getElementById('progressTrack').value;
+        const days = parseInt(document.getElementById('trackDays').value) || 30;
+        const now = Date.now();
+        const laps = (db.laps[track] || []).filter(l => l.date > (now - days * 86400000));
+
+        const res = document.getElementById('trackProgressResult');
+
+        if (laps.length < 2) {
+            res.innerHTML = '<div class="stat" style="text-align:center; color:var(--red);">Need at least 2 laps in this period to calculate.</div>';
+            return;
+        }
+
+        const times = laps.map(l => l.time);
+        const best = Math.min(...times);
+        const worst = Math.max(...times);
+        const imp = ((worst - best) / worst * 100).toFixed(2);
+        const dateRangeStr = formatDateRange(days);
+
+        db.saved.unshift({
+            type: 'track',
+            track: track,
+            dates: dateRangeStr,
+            imp: imp,
+            timestamp: Date.now()
+        });
+        save();
+
+        res.innerHTML = `<div class="stat">
+            <strong style="font-size:18px;">${track}</strong><br>
+            <span style="color:var(--muted)">${dateRangeStr}</span>
+            <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
+            Improvement: <span class="pb" style="font-size:24px;">${imp}%</span><br>
+            Best: ${formatTime(best)}
+        </div>
+        <div style="text-align:center; color:var(--green); font-size:12px; margin-top:5px;">Saved to Progression History ✓</div>`;
+    }
+
+    function computeGlobalProgress() {
+        const days = parseInt(document.getElementById('globalDays').value) || 30;
+        const now = Date.now();
+        const fins = db.finishes.filter(f => f.date > (now - days * 86400000));
+        const res = document.getElementById('globalProgressResult');
+
+        if (!fins.length) {
+            res.innerHTML = '<div class="stat" style="text-align:center;">No races in this period.</div>';
+            return;
+        }
+
+        const avg = (fins.reduce((a, b) => a + b.pos, 0) / fins.length).toFixed(1);
+        const dateRangeStr = formatDateRange(days);
+
+        db.saved.unshift({
+            type: 'global',
+            dates: dateRangeStr,
+            avg: avg,
+            timestamp: Date.now()
+        });
+        save();
+
+        res.innerHTML = `<div class="stat">
+             <strong style="font-size:18px;">Overall Performance</strong><br>
+             <span style="color:var(--muted)">${dateRangeStr}</span>
+             <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
+             Avg Finish: <strong style="color:var(--text); font-size:24px;">P${avg}</strong><br>
+             Races: ${fins.length}
+        </div>
+        <div style="text-align:center; color:var(--green); font-size:12px; margin-top:5px;">Saved to Progression History ✓</div>`;
+    }
+
+    // --- SAVED PROGRESSION VIEW ---
+    function renderSavedProgression() {
+        const list = document.getElementById('savedList');
+        list.innerHTML = db.saved.length ? '' : '<p style="text-align:center; color:var(--muted); margin-top:20px;">No comparisons saved yet.<br>Go to Progress menus and compute stats!</p>';
+
+        db.saved.forEach((item, idx) => {
+            const div = document.createElement('div');
+            div.className = 'item';
+
+            let content = '';
+
+            if (item.type === 'track') {
+                content = `
+                    <div>
+                        <span class="saved-type" style="color:var(--red);">TRACK PROGRESS</span>
+                        <span class="saved-main">${item.track}: <span class="pb">${item.imp}%</span></span>
+                        <span class="saved-dates">${item.dates}</span>
+                    </div>
+                `;
+            } else {
+                content = `
+                    <div>
+                        <span class="saved-type" style="color:var(--green);">OVERALL PROGRESS</span>
+                        <span class="saved-main">Avg Finish: P${item.avg}</span>
+                        <span class="saved-dates">${item.dates}</span>
+                    </div>
+                `;
+            }
+
+            div.innerHTML = content + `<button class="delete-btn" onclick="deleteSaved(${idx})">✕</button>`;
+            list.appendChild(div);
+        });
+    }
+
+    function deleteSaved(idx) {
+        if(confirm('Delete this saved progression?')) {
+            db.saved.splice(idx, 1);
+            save();
+            renderSavedProgression();
+        }
+    }
+
+    function clearSaved() {
+        if(confirm('Clear all saved history?')) {
+            db.saved = [];
+            save();
+            renderSavedProgression();
+        }
+    }
+
+    function resetAllData() {
+        if(confirm('This will delete ALL your lap times, race finishes, and saved progressions. Are you sure?')) {
+            db = { laps: {}, finishes: [], saved: [] };
+            save();
+            alert('All data has been reset.');
+            renderView('menu');
+        }
+    }
+
+    // Initialize the app
+    renderView('menu');
+</script>
+</body>
+</html>
