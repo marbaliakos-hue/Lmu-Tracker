@@ -5,96 +5,26 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
   <title>Sim Progress Tracker – LMU Pro</title>
   <meta name="theme-color" content="#000000" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <style>
     :root {
       --bg: #000000;
-      --glass: rgba(255, 255, 255, 0.06);
-      --glass-strong: rgba(255, 255, 255, 0.10);
-      --glass-border: rgba(255, 255, 255, 0.14);
-      --glass-edge: rgba(255, 255, 255, 0.30);
+      --card: #111111;
+      --border: #333333;
       --red: #cc0000;
-      --red-glow: rgba(204, 0, 0, 0.35);
+      --red-glow: rgba(204, 0, 0, 0.2);
       --green: #00cc33;
       --text: #ffffff;
-      --muted: #9a9a9a;
-      --blur: 22px;
+      --muted: #888888;
     }
 
-    * {
-      box-sizing: border-box;
-      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html { background: #000; }
+    * { box-sizing: border-box; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
 
     body {
       margin: 0;
-      background: #000;
+      background: var(--bg);
       color: var(--text);
       overflow-x: hidden;
       min-height: 100vh;
-      position: relative;
-    }
-
-    /* --- AMBIENT LIGHT (δίνει κάτι να θολώσει το glass) --- */
-    .ambient {
-      position: fixed;
-      inset: 0;
-      z-index: 0;
-      pointer-events: none;
-      overflow: hidden;
-    }
-    .blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(70px);
-      opacity: 0.55;
-    }
-    .blob-1 {
-      width: 340px; height: 340px;
-      background: radial-gradient(circle, #cc0000 0%, rgba(204,0,0,0) 70%);
-      top: -90px; left: -80px;
-    }
-    .blob-2 {
-      width: 300px; height: 300px;
-      background: radial-gradient(circle, #ff2d55 0%, rgba(255,45,85,0) 70%);
-      top: 38%; right: -110px;
-      opacity: 0.35;
-    }
-    .blob-3 {
-      width: 380px; height: 380px;
-      background: radial-gradient(circle, #7a0000 0%, rgba(122,0,0,0) 70%);
-      bottom: -120px; left: 10%;
-      opacity: 0.4;
-    }
-
-    /* --- GLASS BASE --- */
-    .glass {
-      background: var(--glass);
-      -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
-      backdrop-filter: blur(var(--blur)) saturate(180%);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,0.06);
-    }
-    /* specular highlight — η γυαλιστερή γραμμή φωτός */
-    .glass::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--glass-edge), transparent);
-      pointer-events: none;
-    }
-
-    /* fallback για browsers χωρίς backdrop-filter */
-    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-      .glass { background: rgba(20, 20, 20, 0.92); }
     }
 
     header {
@@ -102,43 +32,117 @@
       font-size: 18px;
       font-weight: 800;
       letter-spacing: 1px;
+      border-bottom: 1px solid var(--border);
       text-align: center;
       text-transform: uppercase;
+      background: #050505;
       position: sticky;
       top: 0;
       z-index: 50;
-      border-radius: 0;
-      border-left: none;
-      border-right: none;
-      border-top: none;
-      background: rgba(10, 10, 10, 0.55);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      backdrop-filter: blur(24px) saturate(180%);
-      border-bottom: 1px solid var(--glass-border);
-      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
     }
 
     .container {
-      padding: 16px;
-      padding-bottom: 140px;
-      max-width: 600px;
-      margin: 0 auto;
-      position: relative;
-      z-index: 1;
+        padding: 16px;
+        padding-bottom: 140px;
+        max-width: 600px;
+        margin: 0 auto;
     }
 
-    .view { transition: opacity 0.2s ease-out; opacity: 1; }
-    .hidden { display: none !important; opacity: 0; }
+    .view { animation: viewIn 0.28s ease-out both; }
+    .hidden { display: none !important; }
 
-    .menu { display: grid; gap: 12px; }
+    @keyframes viewIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(14px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.9); }
+      60% { transform: scale(1.02); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 rgba(204,0,0,0); }
+      50% { box-shadow: 0 0 22px rgba(204,0,0,0.35); }
+    }
+
+    @keyframes sweep {
+      from { transform: translateX(-120%); }
+      to { transform: translateX(220%); }
+    }
+
+    @keyframes flashGreen {
+      0% { background: rgba(0,204,51,0.25); }
+      100% { background: var(--card); }
+    }
+
+    @keyframes shakeX {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
+    .menu {
+      display: grid;
+      gap: 12px;
+      max-width: 420px;
+      margin: 0 auto;
+      width: 100%;
+      justify-items: stretch;
+      text-align: center;
+    }
+
+    .menu .btn {
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      animation: cardIn 0.4s ease-out both;
+    }
+
+    .menu .btn span { display: none; }
+
+    .menu .btn::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 40%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+      transform: translateX(-120%);
+    }
+
+    .menu .btn:active::after { animation: sweep 0.5s ease-out; }
+
+    .menu .btn:nth-child(1) { animation-delay: 0.02s; }
+    .menu .btn:nth-child(2) { animation-delay: 0.06s; }
+    .menu .btn:nth-child(3) { animation-delay: 0.10s; }
+    .menu .btn:nth-child(4) { animation-delay: 0.14s; }
+    .menu .btn:nth-child(5) { animation-delay: 0.18s; }
+    .menu .btn:nth-child(6) { animation-delay: 0.22s; }
+    .menu .btn:nth-child(7) { animation-delay: 0.26s; }
+
+    .menu .btn:first-child {
+      border-color: rgba(204,0,0,0.55);
+      animation: cardIn 0.4s ease-out both, pulseGlow 3s ease-in-out infinite 0.6s;
+    }
+
+    .menu .btn:active { transform: scale(0.985); }
+
+    .menu .divider { height: 1px; background: #222; margin: 10px 0; width: 100%; }
 
     .btn {
-      background: var(--glass);
-      -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
-      backdrop-filter: blur(var(--blur)) saturate(180%);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
       padding: 20px;
+      border-radius: 8px;
       font-size: 16px;
       font-weight: 600;
       text-align: left;
@@ -147,86 +151,72 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
-      transition: transform 0.12s ease, background 0.15s ease;
     }
-    .btn::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--glass-edge), transparent);
-      pointer-events: none;
+
+    .btn {
+      transition: transform 0.12s ease-out, background 0.15s ease-out, border-color 0.15s ease-out;
     }
-    .btn:active {
-      background: var(--glass-strong);
-      transform: scale(0.985);
-    }
+
+    .btn:active { background: #222; }
+
+    .btn span { transition: transform 0.15s ease-out; }
+    .btn:active span { transform: translateX(4px); }
 
     .list { display: flex; flex-direction: column; gap: 10px; }
 
     .item {
       padding: 16px;
-      background: var(--glass);
-      -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
-      backdrop-filter: blur(var(--blur)) saturate(180%);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
+      background: var(--card);
+      border-radius: 8px;
+      border: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
-    }
-    .item::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--glass-edge), transparent);
-      pointer-events: none;
+      animation: cardIn 0.35s ease-out both;
+      transition: border-color 0.15s ease-out, transform 0.12s ease-out;
     }
 
+    .item:active { transform: scale(0.99); border-color: #444; }
+
+    .item.fresh { animation: cardIn 0.35s ease-out both, flashGreen 1.1s ease-out; }
+
+    .item.removing { animation: shakeX 0.25s ease-out both; opacity: 0.4; }
+
     .delete-btn {
-      background: rgba(255, 60, 60, 0.12);
+      background: #330000;
       color: #ff5555;
-      border: 1px solid rgba(255, 85, 85, 0.35);
+      border: 1px solid #550000;
       padding: 8px 14px;
-      border-radius: 10px;
+      border-radius: 4px;
       font-size: 12px;
       font-weight: bold;
       min-width: 40px;
       text-align: center;
-      -webkit-backdrop-filter: blur(8px);
-      backdrop-filter: blur(8px);
     }
-    .delete-btn:active { background: rgba(255, 60, 60, 0.25); }
 
     .plus {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: rgba(204, 0, 0, 0.55);
-      -webkit-backdrop-filter: blur(20px) saturate(180%);
-      backdrop-filter: blur(20px) saturate(180%);
+      bottom: 15px;
+      right: 15px;
+      background: var(--red);
       color: white;
-      border: 1px solid rgba(255, 90, 90, 0.5);
-      width: 58px;
-      height: 58px;
+      border: none;
+      width: 55px;
+      height: 55px;
       border-radius: 50%;
       font-size: 30px;
-      box-shadow: 0 8px 28px var(--red-glow), inset 0 1px 0 rgba(255,255,255,0.25);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
       z-index: 100;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: transform 0.12s ease;
     }
     .plus:active { transform: scale(0.9); }
+
+    .plus { transition: transform 0.12s ease-out, box-shadow 0.2s ease-out; animation: popIn 0.4s ease-out both 0.1s; }
+
+    .plus.bump { animation: popIn 0.35s ease-out; box-shadow: 0 0 18px var(--red-glow); }
 
     .back {
       color: var(--muted);
@@ -240,108 +230,88 @@
     }
     .back:active { color: white; }
 
-    .picker {
-      display: flex;
-      gap: 8px;
-      margin-top: 25px;
-      justify-content: center;
-      align-items: center;
-    }
+    .picker { display:flex; gap:8px; margin-top:25px; justify-content: center; align-items: center; }
     .picker input, .picker select {
-      background: rgba(255,255,255,0.06);
-      -webkit-backdrop-filter: blur(14px) saturate(160%);
-      backdrop-filter: blur(14px) saturate(160%);
+      background: #000;
       color: white;
-      border: 1px solid var(--glass-border);
+      border: 1px solid var(--border);
       padding: 12px;
-      border-radius: 12px;
+      border-radius: 6px;
       font-size: 18px;
       text-align: center;
     }
-    .picker input:focus, .picker select:focus {
-      border-color: rgba(255, 80, 80, 0.7);
-      outline: none;
-      box-shadow: 0 0 0 3px rgba(204,0,0,0.18);
-    }
-
-    select, input[type="number"] {
-      background: rgba(255,255,255,0.06);
-      -webkit-backdrop-filter: blur(14px) saturate(160%);
-      backdrop-filter: blur(14px) saturate(160%);
-      color: white;
-      border: 1px solid var(--glass-border);
-      border-radius: 12px;
-      padding: 12px;
-      font-size: 16px;
-    }
-    select option { background: #111; color: #fff; }
+    .picker input:focus { border-color: var(--red); outline: none; }
 
     .pb { color: var(--green); font-weight: bold; }
     .slow { color: #ff5555; font-weight: bold; }
 
     .stat {
       padding: 20px;
-      background: var(--glass);
-      -webkit-backdrop-filter: blur(var(--blur)) saturate(180%);
-      backdrop-filter: blur(var(--blur)) saturate(180%);
-      border: 1px solid var(--glass-border);
-      border-radius: 16px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
       margin-bottom: 15px;
       line-height: 1.6;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
-    }
-    .stat::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--glass-edge), transparent);
-      pointer-events: none;
     }
 
     .compute-btn {
-      background: rgba(204, 0, 0, 0.55);
-      -webkit-backdrop-filter: blur(18px) saturate(180%);
-      backdrop-filter: blur(18px) saturate(180%);
+      background: var(--red);
       color: white;
-      border: 1px solid rgba(255, 90, 90, 0.45);
+      border: none;
       padding: 16px;
-      border-radius: 16px;
+      border-radius: 8px;
       width: 100%;
       font-weight: bold;
       font-size: 16px;
       margin-top: 10px;
       text-transform: uppercase;
-      box-shadow: 0 8px 24px var(--red-glow), inset 0 1px 0 rgba(255,255,255,0.2);
-      transition: transform 0.12s ease;
     }
-    .compute-btn:active { opacity: 0.85; transform: scale(0.985); }
+    .compute-btn:active { opacity: 0.8; transform: scale(0.985); }
 
-    .saved-type { font-size: 12px; color: #ff5555; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block; }
-    .saved-dates { font-size: 13px; color: var(--muted); margin-top: 4px; display: block; }
+    .compute-btn { transition: transform 0.12s ease-out, opacity 0.15s ease-out; }
+
+    .stat { animation: cardIn 0.35s ease-out both; }
+
+    .stat .bar {
+      height: 6px;
+      border-radius: 4px;
+      background: #1c1c1c;
+      overflow: hidden;
+      margin-top: 12px;
+    }
+
+    .stat .bar > i {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--red), #ff4444);
+      transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .stat .bar.gain > i { background: linear-gradient(90deg, #00a82a, var(--green)); }
+
+    .stat .big { font-size: 26px; font-weight: 800; display: inline-block; }
+
+    .stat .big.pop { animation: popIn 0.45s ease-out both; }
+
+    .saved-type { font-size: 12px; color: var(--red); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display:block; }
+    .saved-dates { font-size: 13px; color: var(--muted); margin-top: 4px; display:block; }
     .saved-main { font-size: 18px; font-weight: bold; }
   </style>
 </head>
 <body>
 
-<div class="ambient">
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
-  <div class="blob blob-3"></div>
-</div>
-
 <header id="headerTitle">LMU TRACKER</header>
 
 <div class="container">
     <div id="menu" class="view">
-        <button class="btn" onclick="navigateTo('tracks')">LAP RECORDS <span>›</span></button>
-        <button class="btn" onclick="navigateTo('consistency')">CONSISTENCY <span>›</span></button>
-        <button class="btn" onclick="navigateTo('trackProgress')">TRACK PROGRESS <span>›</span></button>
-        <button class="btn" onclick="navigateTo('globalProgress')">OVERALL PROGRESS <span>›</span></button>
-        <div style="height:1px; background:rgba(255,255,255,0.10); margin:10px 0;"></div>
-        <button class="btn" onclick="navigateTo('savedProgression')">SAVED PROGRESSION <span>›</span></button>
+        <button class="btn" onclick="navigateTo('tracks')">LAP RECORDS</button>
+        <button class="btn" onclick="navigateTo('consistency')">CONSISTENCY</button>
+        <button class="btn" onclick="navigateTo('trackProgress')">TRACK PROGRESS</button>
+        <button class="btn" onclick="navigateTo('globalProgress')">OVERALL PROGRESS</button>
+        <div class="divider"></div>
+        <button class="btn" onclick="navigateTo('savedProgression')" style="border-color:#444;">SAVED PROGRESSION</button>
         <button class="btn" onclick="resetAllData()" style="color:#ff5555; border-color:rgba(255,85,85,0.3); margin-top:20px;">RESET ALL DATA</button>
     </div>
 
@@ -407,7 +377,7 @@
         <a class="back" onclick="goBack()">← Back</a>
         <div style="margin-bottom:15px; color:#aaa; font-size:14px;">History of all comparisons calculated:</div>
         <div id="savedList" class="list"></div>
-        <button onclick="clearSaved()" style="width:100%; padding:15px; background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); color:#888; margin-top:20px; border-radius:16px;">Clear History</button>
+        <button onclick="clearSaved()" style="width:100%; padding:15px; background:none; border:1px solid #333; color:#666; margin-top:20px; border-radius:8px;">Clear History</button>
     </div>
 </div>
 
@@ -442,6 +412,10 @@
         document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
         const activeView = document.getElementById(viewId);
         activeView.classList.remove('hidden');
+        // replay the entrance animation on every navigation
+        activeView.style.animation = 'none';
+        void activeView.offsetWidth;
+        activeView.style.animation = '';
 
         if (viewId === 'tracks') renderTrackList();
         if (viewId === 'records') renderRecords();
@@ -500,10 +474,12 @@
 
         const bestTime = laps.length ? Math.min(...laps.map(l => l.time)) : null;
 
-        // sort αντίγραφο, ώστε το index του ✕ να δείχνει στο σωστό lap
-        const sorted = [...laps].sort((a, b) => a.time - b.time);
-        sorted.forEach((l) => {
-            const idx = laps.indexOf(l);
+        // keep the original index so delete hits the right lap
+        const sorted = laps
+            .map((l, i) => ({ ...l, _i: i }))
+            .sort((a, b) => a.time - b.time);
+
+        sorted.forEach(l => {
             const div = document.createElement('div');
             div.className = 'item';
             div.innerHTML = `
@@ -511,7 +487,7 @@
                     <span class="${l.time === bestTime ? 'pb' : ''}" style="font-size:18px; font-family:monospace;">${formatTime(l.time)}</span><br>
                     <small style="color:var(--muted)">${new Date(l.date).toLocaleDateString()}</small>
                 </div>
-                <button class="delete-btn" onclick="deleteLap(${idx})">✕</button>
+                <button class="delete-btn" onclick="deleteLap(${l._i})">✕</button>
             `;
             list.appendChild(div);
         });
@@ -533,6 +509,22 @@
         document.getElementById('seconds').value = '';
         document.getElementById('milliseconds').value = '';
         renderRecords();
+
+        const plus = document.querySelector('.plus');
+        if (plus) {
+            plus.classList.remove('bump');
+            void plus.offsetWidth;
+            plus.classList.add('bump');
+        }
+        markFresh();
+    }
+
+    // highlight the row that was just added
+    function markFresh() {
+        const first = document.querySelector('.list .item');
+        if (!first) return;
+        first.classList.add('fresh');
+        setTimeout(() => first.classList.remove('fresh'), 1200);
     }
 
     function deleteLap(idx) {
@@ -547,13 +539,16 @@
     function renderFinishes() {
         const list = document.getElementById('finishList');
         list.innerHTML = db.finishes.length ? '' : '<p style="text-align:center; color:var(--muted); margin-top:20px;">No races recorded.</p>';
-        const sorted = [...db.finishes].sort((a, b) => b.date - a.date);
-        sorted.forEach((f) => {
-            const idx = db.finishes.indexOf(f);
+
+        const sorted = db.finishes
+            .map((f, i) => ({ ...f, _i: i }))
+            .sort((a, b) => b.date - a.date);
+
+        sorted.forEach(f => {
             const div = document.createElement('div');
             div.className = 'item';
             div.innerHTML = `<div><strong style="font-size:18px;">P${f.pos}</strong> <small style="color:var(--muted); margin-left:8px;">${new Date(f.date).toLocaleDateString()}</small></div>
-                             <button class="delete-btn" onclick="deleteFinish(${idx})">✕</button>`;
+                             <button class="delete-btn" onclick="deleteFinish(${f._i})">✕</button>`;
             list.appendChild(div);
         });
     }
@@ -592,36 +587,45 @@
         const res = document.getElementById('trackProgressResult');
 
         if (laps.length < 2) {
-            res.innerHTML = '<div class="stat" style="text-align:center; color:#ff5555;">Need at least 2 laps in this period to calculate.</div>';
+            res.innerHTML = '<div class="stat" style="text-align:center; color:var(--red);">Need at least 2 laps in this period to calculate.</div>';
             return;
         }
 
+        // last lap vs the one right before it
         const prev = laps[laps.length - 2];
         const last = laps[laps.length - 1];
         const delta = last.time - prev.time;
-        const imp = ((prev.time - last.time) / prev.time * 100).toFixed(2);
+        const isGain = delta < 0;
+        const pct = ((Math.abs(delta) / prev.time) * 100).toFixed(2);
+
+        const best = Math.min(...laps.map(l => l.time));
         const dateRangeStr = formatDateRange(days);
-        const improved = delta <= 0;
 
         db.saved.unshift({
             type: 'track',
             track: track,
             dates: dateRangeStr,
-            imp: imp,
+            imp: pct,
+            gain: isGain,
             delta: delta,
+            prevTime: prev.time,
+            lastTime: last.time,
             timestamp: Date.now()
         });
-        if (db.saved.length > MAX_SAVED) db.saved.length = MAX_SAVED;
+        db.saved = db.saved.slice(0, MAX_SAVED);
         save();
 
         res.innerHTML = `<div class="stat">
             <strong style="font-size:18px;">${track}</strong><br>
             <span style="color:var(--muted)">${dateRangeStr}</span>
-            <hr style="border:0; border-top:1px solid rgba(255,255,255,0.12); margin:10px 0;">
-            Improvement: <span class="${improved ? 'pb' : 'slow'}" style="font-size:24px;">${imp}%</span><br>
-            Previous: <span style="font-family:monospace;">${formatTime(prev.time)}</span><br>
-            Latest: <span style="font-family:monospace;">${formatTime(last.time)}</span><br>
-            Delta: <span class="${improved ? 'pb' : 'slow'}" style="font-family:monospace;">${signedDelta(delta)}</span>
+            <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
+            Previous lap: <span style="font-family:monospace;">${formatTime(prev.time)}</span><br>
+            Latest lap: <span style="font-family:monospace;">${formatTime(last.time)}</span><br>
+            <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
+            <span class="${isGain ? 'pb' : 'slow'} big pop">${isGain ? '−' : '+'}${pct}%</span>
+            <span style="color:var(--muted); font-size:14px;">(${signedDelta(delta)})</span><br>
+            <span style="color:var(--muted); font-size:14px;">Session best: ${formatTime(best)}</span>
+            <div class="bar ${isGain ? 'gain' : ''}"><i data-w="${Math.min(100, Math.abs(parseFloat(pct)) * 12).toFixed(1)}"></i></div>
         </div>
         <div style="text-align:center; color:var(--green); font-size:12px; margin-top:5px;">Saved to Progression History ✓</div>`;
     }
@@ -638,7 +642,6 @@
         }
 
         const avg = (fins.reduce((a, b) => a + b.pos, 0) / fins.length).toFixed(1);
-        const best = Math.min(...fins.map(f => f.pos));
         const dateRangeStr = formatDateRange(days);
 
         db.saved.unshift({
@@ -647,16 +650,16 @@
             avg: avg,
             timestamp: Date.now()
         });
-        if (db.saved.length > MAX_SAVED) db.saved.length = MAX_SAVED;
+        db.saved = db.saved.slice(0, MAX_SAVED);
         save();
 
         res.innerHTML = `<div class="stat">
              <strong style="font-size:18px;">Overall Performance</strong><br>
              <span style="color:var(--muted)">${dateRangeStr}</span>
-             <hr style="border:0; border-top:1px solid rgba(255,255,255,0.12); margin:10px 0;">
+             <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
              Avg Finish: <strong style="color:var(--text); font-size:24px;">P${avg}</strong><br>
-             Best Finish: <span class="pb">P${best}</span><br>
              Races: ${fins.length}
+             <div class="bar gain"><i data-w="${Math.max(4, Math.min(100, (1 - (parseFloat(avg) - 1) / 20) * 100)).toFixed(1)}"></i></div>
         </div>
         <div style="text-align:center; color:var(--green); font-size:12px; margin-top:5px;">Saved to Progression History ✓</div>`;
     }
@@ -673,11 +676,11 @@
             let content = '';
 
             if (item.type === 'track') {
-                const improved = (item.delta === undefined) || item.delta <= 0;
+                const gain = item.gain !== undefined ? item.gain : true;
                 content = `
                     <div>
-                        <span class="saved-type">TRACK PROGRESS</span>
-                        <span class="saved-main">${item.track}: <span class="${improved ? 'pb' : 'slow'}">${item.imp}%</span></span>
+                        <span class="saved-type" style="color:var(--red);">TRACK PROGRESS</span>
+                        <span class="saved-main">${item.track}: <span class="${gain ? 'pb' : 'slow'}">${gain ? '−' : '+'}${item.imp}%</span></span>
                         <span class="saved-dates">${item.dates}</span>
                     </div>
                 `;
@@ -720,6 +723,21 @@
             renderView('menu');
         }
     }
+
+    // animate the progress bars after the result card renders
+    function animateBars() {
+        requestAnimationFrame(() => {
+            document.querySelectorAll('.stat .bar > i').forEach(el => {
+                el.style.width = (el.dataset.w || 0) + '%';
+            });
+        });
+    }
+
+    const _renderView = renderView;
+    renderView = function (viewId) {
+        _renderView(viewId);
+        animateBars();
+    };
 
     // Initialize the app
     renderView('menu');
